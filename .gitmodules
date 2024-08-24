@@ -1,0 +1,3 @@
+[submodule "mlxtend"]
+	path = mlxtend
+	url = https://github.com/rasbt/mlxtend.git
