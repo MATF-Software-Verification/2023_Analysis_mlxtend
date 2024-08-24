@@ -5,7 +5,7 @@ Ovaj repozitorijum namenjen je za izradu samostalnog praktičnog seminarskog rad
 **Autor:** Mladen Canović 1098/2020
 
 ## Opis Projekta
-`mlxtend` (machine learning extensions) je *Python* biblioteka koja pruža korisne alate za svakodnevne zadatke u oblasti *Data Science*-a. Ova biblioteka uključuje alate za izbor atributa, klasifikaciju, regresiju, obradu podataka, evaluaciju modela i vizualizaciju. Razvijena je kako bi proširila mogućnosti postojećih biblioteka za mašinsko učenje, poput [scikit-learn](https://scikit-learn.org)-a i sličnih. `mlxtend` nudi jednostavan i lako proširiv skup alata koji mogu olakšati rad kako istraživačima tako i ljudima u industriji.
+`mlxtend` (Machine Learning Library Extensions) je *Python* biblioteka koja pruža korisne alate za svakodnevne zadatke u oblasti *Data Science*-a. Ova biblioteka uključuje alate za izbor atributa, klasifikaciju, regresiju, obradu podataka, evaluaciju modela i vizualizaciju. Razvijena je kako bi proširila mogućnosti postojećih biblioteka za mašinsko učenje, poput [scikit-learn](https://scikit-learn.org)-a i sličnih. `mlxtend` nudi jednostavan i lako proširiv skup alata koji mogu olakšati rad kako istraživačima tako i ljudima u industriji.
 
 ### Autor Biblioteke
 
@@ -15,4 +15,4 @@ Više informacija o `mlxtend` biblioteci možete pronaći na [zvaničnoj GitHub 
 
 ## Sadržaj
 
-- `ProjectAnalysisReport.md` - Detaljan izveštaj o analizi projekta.
+- [`ProjectAnalysisReport.md`](ProjectAnalysisReport.md) - Detaljan izveštaj o analizi projekta.
