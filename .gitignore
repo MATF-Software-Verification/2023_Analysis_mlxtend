@@ -1,1 +1,41 @@
+# Ignore all log folders
 log/
+
+# Ignore Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Ignore virtual environments
+env/
+venv/
+.venv/
+
+# Ignore pytest cache
+.pytest_cache/
+
+# Ignore coverage reports
+.coverage
+.coverage.*
+htmlcov/
+.coveragerc
+
+# Ignore pytest and coverage related files
+.cache/
+.tox/
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
+# Ignore Visual Studio Code settings
+.vscode/
+*.code-workspace
+
+# Ignore Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Ignore environment variable files
+.env
+.env.*
+*.env
