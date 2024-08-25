@@ -79,15 +79,7 @@ Možemo videti da su detektovani sledeći problemi:
     ```
     AssertionError: MinMax skaliranje nije ispravno za konstantne vrednosti!
     ```
-    U jednom od komentara u biblioteci navedeno je:
-    ```python
-    # Notes
-    # ----------
-    # If all values in a given column are the same, these values are all
-    # set to `0.0`. The standard deviation in the `parameters` dictionary
-    # is consequently set to `1.0` to avoid dividing by zero.
-    ```
-    Dakle, navedeno je da će u slučaju konstantnih vrednosti odgovarajuće vrednosti biti `0`. Ipak, testiranjem je utvrđeno da su ove vrednosti `nan`, kao što se može videti na prikazu iz logova.
+    Problem je što, za razliku od `0` vrednosti koje koristi *sklearn*, *mlxtend* rešava problem konstantnih vrednosti korišćenjem nedostajućih vrednosti (`nan`). Iako ne može da se tvrdi (pre integracionog testiranja) da je ovo neočekivano ponašanje i da kasnije mora dovesti do greške, svakako je zanimljiva razlika u dizajnu u odnosu na usvojeni standard. Takođe, može dovesti do problema ukoliko se ovaj tip skaliranja koristi pre primene algoritama iz neke druge biblioteke koja ne tretira isto nedostajuće i nula vrednosti, a svakako možemo pretpostaviti da će se najveći broj programera koji razvijaju neke nove pakete prikloniti odlukama korišćenijih biblioteka.
 
     ![Min-Max Scaler Testing Constants](assets/imgs/mlxtend_testing_minmax_scaler_example_test_fail_constant_values.png)
 3. Naredni problem se javlja u `tests/test_minmax_scaling.py::test_minmax_scaling_single_row` i u pitanju je:
