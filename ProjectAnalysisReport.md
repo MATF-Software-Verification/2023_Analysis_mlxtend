@@ -101,11 +101,56 @@ Nakon odgovarajuće promene (`np.NINF` treba zameniti konstruktom `-np.inf`) dob
 
 ![After Change Unit Testing Results](assets/imgs/unit_testing_short_summary_2.png)
 
-Preostaje nam još i veliki broj upozorenja (`1056 warnings`). Na sledećoj slici se može videti i kratak izveštaj o upozorenjima. Detaljnijom odokativnom analizom, a takođe i sa ovog kratkog izveštaja možemo primetiti da je najčešće u pitanju zastarivanje određenih jezičkih konstrukta u narednim verzijama korišćenih biblioteka.
+Nakon otklanjanja tih jednostavnih grešaka, na sledeći način rešavamo i probleme sa obradom `nan` vrednosti u funkciji `minmax_scaling()` iz datoteke `scaling.py`. Navedeni deo koda:
+
+```python
+numerator = ary_newt[:, columns] - ary_newt[:, columns].min(axis=0)
+denominator = ary_newt[:, columns].max(axis=0) - ary_newt[:, columns].min(axis=0)
+ary_newt[:, columns] = numerator / denominator
+
+if not min_val == 0 and not max_val == 1:
+    ary_newt[:, columns] = ary_newt[:, columns] * (max_val - min_val) + min_val
+
+return ary_newt[:, columns]
+```
+menjamo sledećim linijama kojima rešavamo sve prethodno navedene probleme:
+```python
+for col in columns:
+    col_data = ary_newt[:, col]
+
+    # ignore nan values to scale non-nan values appropriately (like in sklearn)
+    col_min = np.nanmin(col_data)
+    col_max = np.nanmax(col_data)
+
+    # avoid div by zero (when min == max)
+    if col_max == col_min:
+        ary_newt[:, col] = min_val
+    else:
+        scaled_data = (col_data - col_min) / (col_max - col_min)
+        scaled_data = scaled_data * (max_val - min_val) + min_val
+
+        ary_newt[:, col] = np.where(np.isnan(col_data), np.nan, scaled_data)
+
+return ary_newt[:, columns]
+```
+
+Preostaje nam još i veliki broj upozorenja (`1056 warnings`), koje je potrebno adresirati. Na sledećoj slici se može videti kratak izveštaj o dobijenim upozorenjima. Odokativnom analizom, a takođe i sa ovog kratkog izveštaja možemo primetiti da je najčešće u pitanju zastarivanje određenih jezičkih konstrukta u narednim verzijama korišćenih biblioteka.
 
 ![Warning Summary](assets/imgs/warnings_summary.png)
 
-TODO: Komentar nakon sređivanja koda za nanove. Svi testovi prolaze...
+Prvo upozorenje (`RuntimeWarning: invalid value encountered in divide`) rešeno je prilikom opisanog rešavanja grešaka dobijenih testiranjem.
+
+Drugo upozorenje je upozorenje koje se pojavljuje zbog korišćenja `update != 0.0` u liniji `errors += int(update != 0.0)`. Pošto `update` može biti niz, poređenje direktno sa skalarnom vrednošću `(0.0)` koristeći `!=` može izazvati upozorenje u novijim verzijama biblioteke `NumPy`. Ovo se dešava jer `NumPy` obeshrabruje implicitnu konverziju nizova u skalarne vrednosti prilikom vršenja logičkih poređenja. Ovaj problem rešavamo jednostavnom promenom ove linije na sledeći način:
+```python
+errors += np.sum(update != 0.0)
+```
+Semantički, `update` je niz `bool` vrednosti, koje predstavljaju uspešnu ili pogrešnu klasifikaciju primera iz trenutnog niza slučajno odabranih primera (dakle, ovaj `numpy.array` sadrži vrednosti `True` ili `False`), tako da sumiranjem ovih vrednosti dobijamo odgovarajuću celobrojnu vrednost poštujući preporuke biblioteke `NumPy`.
+
+Poslednje upozorenje je rešeno sitnom korekcijom u celom repozitorijumu prateći smernice biblioteke `sklearn`. Tačnije, svako prosleđivanje parametra `fit_params` prilikom poziva funkcije zamenjeno je sa `params`.
+
+Konačno, nakon svih ispravki, pokretanjem testiranja dobijamo sledeći izlaz:
+
+![Final Unit Testing Summary](assets/imgs/unit_tests_solved.png)
 
 #### Pokrivenost
 
