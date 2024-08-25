@@ -49,7 +49,7 @@ Za jedinično testiranje odabrane su sledeće fukncionalnosti koje će biti test
     - Da li je vrednost *R2 score* u problemu regresije veća od 0? Ovo se analizira iako je problem najčešće prilikom razvoja, tj. grešku pravi onaj ko koristi biblioteku. Ipak, negativna vrednost ukazuje da osoba koja koristi biblioteku nešto definitivno ne radi kako treba. Tačnije, korisno je testirati ovo svojstvo da bi se ukazalo programeru da obrati pažnju na program koji razvija. ✅
     - Da li radi korektno (izbacuje odgovarajući izuzetak) ako prosledimo prazan skup? ✅
 
-Testovi su dostupni u folderu `unit_tests/tests` i pokreću se na jedan od dva sledeća načina:
+Testovi su dostupni u folderu `unit_tests/tests` i pokreću se na jedan od sledećih načina:
 
 ```
 cd unit_tests
@@ -59,8 +59,12 @@ ili, ukoliko se koristi `pipenv` sledećom komandom:
 ```
 pipenv run pytest unit_tests/tests/
 ```
+i na kraju, ukoliko je aktivirano okruženje u kojem je instalirana biblioteka `pytest`, testiranje se može pokrenuti sledećom komandom:
+```
+pytest unit_tests/tests/
+```
 
-*Podrazumeva se da su u oba slučaja instalirane neophodne biblioteke.* TODO: test req na kraju
+*Podrazumeva se da su instalirane neophodne biblioteke.*
 
 #### Analiza i zaključci
 
@@ -138,7 +142,7 @@ Preostaje nam još i veliki broj upozorenja (`1056 warnings`), koje je potrebno 
 
 ![Warning Summary](assets/imgs/warnings_summary.png)
 
-Prvo upozorenje (`RuntimeWarning: invalid value encountered in divide`) rešeno je prilikom opisanog rešavanja grešaka dobijenih testiranjem.
+Prvo upozorenje (`RuntimeWarning: invalid value encountered in divide`) je već rešeno prilikom gore opisanog postupka rešavanja grešaka dobijenih testiranjem.
 
 Drugo upozorenje je upozorenje koje se pojavljuje zbog korišćenja `update != 0.0` u liniji `errors += int(update != 0.0)`. Pošto `update` može biti niz, poređenje direktno sa skalarnom vrednošću `(0.0)` koristeći `!=` može izazvati upozorenje u novijim verzijama biblioteke `NumPy`. Ovo se dešava jer `NumPy` obeshrabruje implicitnu konverziju nizova u skalarne vrednosti prilikom vršenja logičkih poređenja. Ovaj problem rešavamo jednostavnom promenom ove linije na sledeći način:
 ```python
@@ -154,6 +158,13 @@ Konačno, nakon svih ispravki, pokretanjem testiranja dobijamo sledeći izlaz:
 
 #### Pokrivenost
 
+Kao što je napomenuto na početku, za pokrivenost je korišćen alat `coverage.py`. Pokretanjem pregleda pokrivenosti na sledeći način:
+```
+coverage run -m pytest unit_tests/tests/
+coverage report -m
+```
+dobija se izveštaj u nastavku:
+![Unit Testing Coverage](assets/imgs/unit_tests_coverage.png)
 
 
 ### Integraciono testiranje
