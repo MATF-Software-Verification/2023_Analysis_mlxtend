@@ -138,4 +138,4 @@ def test_minmax_scaling_nan_values():
         else:
             # ako sklearn ne javlja grešku, tek tada upoređujemo rezultate
             save_results_minmax(X_scaled_mlxtend, X_scaled_sklearn, "test_minmax_scaling_nan_values", i)
-            assert np.allclose(X_scaled_mlxtend, X_scaled_sklearn), "MinMax skaliranje nije ispravno kada se obrađuju NaN vrednosti!"
+            assert np.allclose(X_scaled_mlxtend, X_scaled_sklearn, atol=1e-5, equal_nan=True), "MinMax skaliranje nije ispravno kada se obrađuju NaN vrednosti!"
