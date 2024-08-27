@@ -58,7 +58,7 @@ index d51b9fee..45ec5983 100644
  
      def score(self, X, y):
 diff --git a/mlxtend/_base/_iterative_model.py b/mlxtend/_base/_iterative_model.py
-index 496af3ee..89bd90bb 100644
+index 496af3ee..038ec1d4 100644
 --- a/mlxtend/_base/_iterative_model.py
 +++ b/mlxtend/_base/_iterative_model.py
 @@ -23,16 +23,16 @@ class _IterativeModel(object):
@@ -81,7 +81,7 @@ index 496af3ee..89bd90bb 100644
                  if self.print_progress > 2:
                      if not hasattr(self, "eta_str_"):
                          self.eta_str_ = "00:00:00"
-@@ -41,14 +41,14 @@ class _IterativeModel(object):
+@@ -41,7 +41,7 @@ class _IterativeModel(object):
                          if eta_sec < 0.0:
                              eta_sec = 0.0
                          self.eta_str_ = self._to_hhmmss(eta_sec)
@@ -90,14 +90,6 @@ index 496af3ee..89bd90bb 100644
              stderr.write(s)
              stderr.flush()
  
-     def _to_hhmmss(self, sec):
-         m, s = divmod(sec, 60)
-         h, m = divmod(m, 60)
--        return "%d:%02d:%02d" % (h, m, s)
-+        return f"{h}:{m:02d}:{s:02d}"
- 
-     def _yield_minibatches_idx(self, rgen, n_batches, data_ary, shuffle=True):
-         indices = np.arange(data_ary.shape[0])
 diff --git a/mlxtend/_base/_multilayer.py b/mlxtend/_base/_multilayer.py
 index b3ae1b07..71051fdb 100644
 --- a/mlxtend/_base/_multilayer.py
