@@ -1,3 +1,37 @@
+diff --git a/mlxtend/_base/_base_model.py b/mlxtend/_base/_base_model.py
+index f7dbba5c..d2397061 100644
+--- a/mlxtend/_base/_base_model.py
++++ b/mlxtend/_base/_base_model.py
+@@ -65,11 +65,11 @@ class _BaseModel(object):
+         for p in parameters:
+             if p.kind == p.VAR_POSITIONAL:
+                 raise RuntimeError(
+-                    "scikit-learn estimators should always "
+-                    "specify their parameters in the signature"
+-                    " of their __init__ (no varargs)."
+-                    " %s with constructor %s doesn't "
+-                    " follow this convention." % (cls, init_signature)
++                    f"scikit-learn estimators should always "
++                    f"specify their parameters in the signature"
++                    f" of their __init__ (no varargs)."
++                    f" {cls} with constructor {init_signature} doesn't "
++                    f" follow this convention."
+                 )
+         # Extract and sort argument names excluding 'self'
+         return sorted([p.name for p in parameters])
+@@ -130,9 +130,9 @@ class _BaseModel(object):
+             key, delim, sub_key = key.partition("__")
+             if key not in valid_params:
+                 raise ValueError(
+-                    "Invalid parameter %s for estimator %s. "
+-                    "Check the list of available parameters "
+-                    "with `estimator.get_params().keys()`." % (key, self)
++                    f"Invalid parameter {key} for estimator {self}. "
++                    f"Check the list of available parameters "
++                    f"with `estimator.get_params().keys()`."
+                 )
+ 
+             if delim:
 diff --git a/mlxtend/_base/_classifier.py b/mlxtend/_base/_classifier.py
 index d51b9fee..45ec5983 100644
 --- a/mlxtend/_base/_classifier.py
@@ -23,6 +57,209 @@ index d51b9fee..45ec5983 100644
                  )
  
      def score(self, X, y):
+diff --git a/mlxtend/_base/_iterative_model.py b/mlxtend/_base/_iterative_model.py
+index 496af3ee..89bd90bb 100644
+--- a/mlxtend/_base/_iterative_model.py
++++ b/mlxtend/_base/_iterative_model.py
+@@ -23,16 +23,16 @@ class _IterativeModel(object):
+ 
+     def _print_progress(self, iteration, n_iter, cost=None, time_interval=10):
+         if self.print_progress > 0:
+-            s = "\rIteration: %d/%d" % (iteration, n_iter)
++            s = f"\rIteration: {iteration}/{n_iter}"
+             if cost:
+-                s += " | Cost %.2f" % cost
++                s += f" | Cost {cost:.2f}"
+             if self.print_progress > 1:
+                 if not hasattr(self, "ela_str_"):
+                     self.ela_str_ = "00:00:00"
+                 if not iteration % time_interval:
+                     ela_sec = time() - self._init_time
+                     self.ela_str_ = self._to_hhmmss(ela_sec)
+-                s += " | Elapsed: %s" % self.ela_str_
++                s += f" | Elapsed: {self.ela_str_}"
+                 if self.print_progress > 2:
+                     if not hasattr(self, "eta_str_"):
+                         self.eta_str_ = "00:00:00"
+@@ -41,14 +41,14 @@ class _IterativeModel(object):
+                         if eta_sec < 0.0:
+                             eta_sec = 0.0
+                         self.eta_str_ = self._to_hhmmss(eta_sec)
+-                    s += " | ETA: %s" % self.eta_str_
++                    s += f" | ETA: {self.eta_str_}"
+             stderr.write(s)
+             stderr.flush()
+ 
+     def _to_hhmmss(self, sec):
+         m, s = divmod(sec, 60)
+         h, m = divmod(m, 60)
+-        return "%d:%02d:%02d" % (h, m, s)
++        return f"{h}:{m:02d}:{s:02d}"
+ 
+     def _yield_minibatches_idx(self, rgen, n_batches, data_ary, shuffle=True):
+         indices = np.arange(data_ary.shape[0])
+diff --git a/mlxtend/_base/_multilayer.py b/mlxtend/_base/_multilayer.py
+index b3ae1b07..71051fdb 100644
+--- a/mlxtend/_base/_multilayer.py
++++ b/mlxtend/_base/_multilayer.py
+@@ -38,7 +38,7 @@ class _MultiLayer(object):
+             "1": [[n_features, hidden_layers[0]], "n_features, n_hidden_1"],
+             "out": [
+                 [hidden_layers[-1], n_classes],
+-                "n_hidden_%d, n_classes" % len(hidden_layers),
++                f"n_hidden_{len(hidden_layers)}, n_classes",
+             ],
+         }
+         biases = {
+@@ -51,9 +51,9 @@ class _MultiLayer(object):
+                 layer = i + 2
+                 weights[str(layer)] = [
+                     [weights[str(layer - 1)][0][1], h],
+-                    "n_hidden_%d, n_hidden_%d" % (layer - 1, layer),
++                    f"n_hidden_{layer - 1}, n_hidden_{layer}",
+                 ]
+-                biases[str(layer)] = [[h], "n_hidden_%d" % layer]
++                biases[str(layer)] = [[h], f"n_hidden_{layer}"]
+         return weights, biases
+ 
+     def _init_params_from_layermapping(self, weight_maps, bias_maps, random_seed=None):
+diff --git a/mlxtend/_base/_regressor.py b/mlxtend/_base/_regressor.py
+index e3d0a1d9..3cea1bcd 100644
+--- a/mlxtend/_base/_regressor.py
++++ b/mlxtend/_base/_regressor.py
+@@ -17,7 +17,7 @@ class _Regressor(object):
+ 
+     def _check_target_array(self, y, allowed=None):
+         if not isinstance(y[0], (float, np.float_)):
+-            raise AttributeError("y must be a float array.\nFound %s" % y.dtype)
++            raise AttributeError(f"y must be a float array.\nFound {y.dtype}")
+ 
+     def fit(self, X, y, init_params=True):
+         """Learn model from training data.
+diff --git a/mlxtend/classifier/ensemble_vote.py b/mlxtend/classifier/ensemble_vote.py
+index e04d5922..40e944fc 100644
+--- a/mlxtend/classifier/ensemble_vote.py
++++ b/mlxtend/classifier/ensemble_vote.py
+@@ -149,18 +149,18 @@ class EnsembleVoteClassifier(BaseEstimator, ClassifierMixin, TransformerMixin):
+         """
+         if isinstance(y, np.ndarray) and len(y.shape) > 1 and y.shape[1] > 1:
+             raise NotImplementedError(
+-                "Multilabel and multi-output" " classification is not supported."
++                "Multilabel and multi-output classification is not supported."
+             )
+ 
+         if self.voting not in ("soft", "hard"):
+             raise ValueError(
+-                "Voting must be 'soft' or 'hard'; got (voting=%r)" % self.voting
++                f"Voting must be 'soft' or 'hard'; got (voting={self.voting})"
+             )
+ 
+         if self.weights and len(self.weights) != len(self.clfs):
+             raise ValueError(
+-                "Number of classifiers and weights must be equal"
+-                "; got %d weights, %d clfs" % (len(self.weights), len(self.clfs))
++                f"Number of classifiers and weights must be equal; "
++                f"got {len(self.weights)} weights, {len(self.clfs)} clfs"
+             )
+ 
+         self.le_ = LabelEncoder()
+@@ -169,7 +169,7 @@ class EnsembleVoteClassifier(BaseEstimator, ClassifierMixin, TransformerMixin):
+ 
+         if not self.fit_base_estimators and self.use_clones:
+             warnings.warn(
+-                "fit_base_estimators=False " "enforces use_clones to be `False`"
++                "fit_base_estimators=False enforces use_clones to be `False`"
+             )
+             self.use_clones = False
+ 
+@@ -180,14 +180,14 @@ class EnsembleVoteClassifier(BaseEstimator, ClassifierMixin, TransformerMixin):
+ 
+         if self.fit_base_estimators:
+             if self.verbose > 0:
+-                print("Fitting %d classifiers..." % (len(self.clfs)))
++                print(f"Fitting {len(self.clfs)} classifiers...")
+ 
+             for clf in self.clfs_:
+                 if self.verbose > 0:
+                     i = self.clfs_.index(clf) + 1
+                     print(
+-                        "Fitting clf%d: %s (%d/%d)"
+-                        % (i, _name_estimators((clf,))[0][0], i, len(self.clfs_))
++                        f"Fitting clf{i}: {_name_estimators((clf,))[0][0]} "
++                        f"({i}/{len(self.clfs_)})"
+                     )
+ 
+                 if self.verbose > 2:
+@@ -220,7 +220,7 @@ class EnsembleVoteClassifier(BaseEstimator, ClassifierMixin, TransformerMixin):
+         """
+         if not hasattr(self, "clfs_"):
+             raise NotFittedError(
+-                "Estimator not fitted, " "call `fit` before exploiting the model."
++                "Estimator not fitted, call `fit` before exploiting the model."
+             )
+ 
+         if self.voting == "soft":
+@@ -255,7 +255,7 @@ class EnsembleVoteClassifier(BaseEstimator, ClassifierMixin, TransformerMixin):
+         """
+         if not hasattr(self, "clfs_"):
+             raise NotFittedError(
+-                "Estimator not fitted, " "call `fit` before exploiting the model."
++                "Estimator not fitted, call `fit` before exploiting the model."
+             )
+ 
+         avg = np.average(self._predict_probas(X), axis=0, weights=self.weights)
+@@ -291,12 +291,12 @@ class EnsembleVoteClassifier(BaseEstimator, ClassifierMixin, TransformerMixin):
+             out = self.named_clfs.copy()
+             for name, step in self.named_clfs.items():
+                 for key, value in step.get_params(deep=True).items():
+-                    out["%s__%s" % (name, key)] = value
++                    out[f"{name}__{key}"] = value
+ 
+             for key, value in (
+                 super(EnsembleVoteClassifier, self).get_params(deep=False).items()
+             ):
+-                out["%s" % key] = value
++                out[f"{key}"] = value
+             return out
+ 
+     def _predict(self, X):
+diff --git a/mlxtend/classifier/oner.py b/mlxtend/classifier/oner.py
+index 78d33ef1..d8c878df 100644
+--- a/mlxtend/classifier/oner.py
++++ b/mlxtend/classifier/oner.py
+@@ -61,7 +61,7 @@ class OneRClassifier(BaseEstimator, ClassifierMixin):
+         allowed = {"first", "chi-squared"}
+         if resolve_ties not in allowed:
+             raise ValueError(
+-                "resolve_ties must be in %s. Got %s." % (allowed, resolve_ties)
++                f"resolve_ties must be in {allowed}. Got {resolve_ties}."
+             )
+         self.resolve_ties = resolve_ties
+ 
+@@ -87,10 +87,10 @@ class OneRClassifier(BaseEstimator, ClassifierMixin):
+         for c in range(X.shape[1]):
+             if np.unique(X[:, c]).shape[0] == X.shape[0]:
+                 warnings.warn(
+-                    "Feature array likely contains at least one"
+-                    " non-categorical column."
+-                    " Column %d appears to have a unique value"
+-                    " in every row." % c
++                    f"Feature array likely contains at least one"
++                    f" non-categorical column."
++                    f" Column {c} appears to have a unique value"
++                    f" in every row."
+                 )
+             break
+ 
+@@ -198,7 +198,7 @@ class OneRClassifier(BaseEstimator, ClassifierMixin):
+         """
+         if not hasattr(self, "prediction_dict_"):
+             raise NotFittedError(
+-                "Estimator not fitted, " "call `fit` before using the model."
++                "Estimator not fitted, call `fit` before using the model."
+             )
+ 
+         rules = self.prediction_dict_["rules (value: class)"]
 diff --git a/mlxtend/classifier/perceptron.py b/mlxtend/classifier/perceptron.py
 index 30fb4b5b..ce48bb1f 100644
 --- a/mlxtend/classifier/perceptron.py
@@ -36,10 +273,69 @@ index 30fb4b5b..ce48bb1f 100644
  
              if self.print_progress:
                  self._print_progress(iteration=i + 1, n_iter=self.epochs, cost=errors)
+diff --git a/mlxtend/classifier/stacking_classification.py b/mlxtend/classifier/stacking_classification.py
+index b92eb5d9..9de40658 100644
+--- a/mlxtend/classifier/stacking_classification.py
++++ b/mlxtend/classifier/stacking_classification.py
+@@ -130,7 +130,7 @@ class StackingClassifier(_BaseXComposition, _BaseStackingClassifier, Transformer
+         allowed = {None, "first", "last"}
+         if drop_proba_col not in allowed:
+             raise ValueError(
+-                "`drop_proba_col` must be in %s. Got %s" % (allowed, drop_proba_col)
++                f"`drop_proba_col` must be in {allowed}. Got {drop_proba_col}"
+             )
+         self.drop_proba_col = drop_proba_col
+ 
+@@ -168,7 +168,7 @@ class StackingClassifier(_BaseXComposition, _BaseStackingClassifier, Transformer
+         """
+         if not self.fit_base_estimators:
+             warnings.warn(
+-                "fit_base_estimators=False " "enforces use_clones to be `False`"
++                "fit_base_estimators=False enforces use_clones to be `False`"
+             )
+             self.use_clones = False
+ 
+@@ -188,14 +188,15 @@ class StackingClassifier(_BaseXComposition, _BaseStackingClassifier, Transformer
+ 
+         if self.fit_base_estimators:
+             if self.verbose > 0:
+-                print("Fitting %d classifiers..." % (len(self.classifiers)))
++                print(f"Fitting {len(self.classifiers)} classifiers...")
+ 
+             for clf in self.clfs_:
+                 if self.verbose > 0:
+                     i = self.clfs_.index(clf) + 1
+                     print(
+-                        "Fitting classifier%d: %s (%d/%d)"
+-                        % (i, _name_estimators((clf,))[0][0], i, len(self.clfs_))
++                        f"Fitting classifier{i}: "
++                        f"{_name_estimators((clf,))[0][0]} "
++                        f"({i}/{len(self.clfs_)})"
+                     )
+ 
+                 if self.verbose > 2:
 diff --git a/mlxtend/classifier/stacking_cv_classification.py b/mlxtend/classifier/stacking_cv_classification.py
-index 5bff6907..96c38a64 100644
+index 5bff6907..474792ca 100644
 --- a/mlxtend/classifier/stacking_cv_classification.py
 +++ b/mlxtend/classifier/stacking_cv_classification.py
+@@ -169,7 +169,7 @@ class StackingCVClassifier(
+         allowed = {None, "first", "last"}
+         if drop_proba_col not in allowed:
+             raise ValueError(
+-                "`drop_proba_col` must be in %s. Got %s" % (allowed, drop_proba_col)
++                f"`drop_proba_col` must be in {allowed}. Got {drop_proba_col}"
+             )
+ 
+         self.drop_proba_col = drop_proba_col
+@@ -222,7 +222,7 @@ class StackingCVClassifier(
+             self.clfs_ = self.classifiers
+             self.meta_clf_ = self.meta_classifier
+         if self.verbose > 0:
+-            print("Fitting %d classifiers..." % (len(self.classifiers)))
++            print(f"Fitting {len(self.classifiers)} classifiers...")
+ 
+         if y.ndim > 1:
+             self._label_encoder = [LabelEncoder().fit(yk) for yk in y.T]
 @@ -245,9 +245,9 @@ class StackingCVClassifier(
          # X, y = check_X_y(X, y, accept_sparse=['csc', 'csr'], dtype=None)
  
@@ -52,6 +348,17 @@ index 5bff6907..96c38a64 100644
  
          meta_features = None
  
+@@ -255,8 +255,8 @@ class StackingCVClassifier(
+             if self.verbose > 0:
+                 i = self.clfs_.index(model) + 1
+                 print(
+-                    "Fitting classifier%d: %s (%d/%d)"
+-                    % (i, _name_estimators((model,))[0][0], i, len(self.clfs_))
++                    f"Fitting classifier{i}: {_name_estimators((model,))[0][0]} "
++                    f"({i}/{len(self.clfs_)})"
+                 )
+ 
+             if self.verbose > 2:
 @@ -273,7 +273,7 @@ class StackingCVClassifier(
                  groups=groups,
                  cv=final_cv,
@@ -61,17 +368,45 @@ index 5bff6907..96c38a64 100644
                  verbose=self.verbose,
                  pre_dispatch=self.pre_dispatch,
                  method="predict_proba" if self.use_probas else "predict",
+diff --git a/mlxtend/data/multiplexer.py b/mlxtend/data/multiplexer.py
+index 0d88f243..e00e4526 100644
+--- a/mlxtend/data/multiplexer.py
++++ b/mlxtend/data/multiplexer.py
+@@ -71,11 +71,11 @@ def make_multiplexer_dataset(
+     """
+     if not isinstance(address_bits, int):
+         raise AttributeError(
+-            "address_bits" " must be an integer. Got %s." % type(address_bits)
++            f"address_bits must be an integer. Got {type(address_bits)}."
+         )
+     if address_bits < 1:
+         raise AttributeError(
+-            "Number of address_bits" " must be greater than 0. Got %s." % address_bits
++            f"Number of address_bits must be greater than 0. Got {address_bits}."
+         )
+     register_bits = 2**address_bits
+     total_bits = address_bits + register_bits
 diff --git a/mlxtend/evaluate/accuracy.py b/mlxtend/evaluate/accuracy.py
-index fc80fcfe..edf5d392 100644
+index fc80fcfe..fa3bfd22 100644
 --- a/mlxtend/evaluate/accuracy.py
 +++ b/mlxtend/evaluate/accuracy.py
-@@ -93,6 +93,5 @@ def accuracy_score(
+@@ -58,7 +58,7 @@ def accuracy_score(
+ 
+     if len(y_target) != len(y_predicted):
+         raise AttributeError(
+-            "`y_target` and `y_predicted`" " don't have the same number of elements."
++            "`y_target` and `y_predicted` don't have the same number of elements."
+         )
+     if method == "standard":
+         return _compute_metric(target_temp, predicted_temp, normalize)
+@@ -93,6 +93,6 @@ def accuracy_score(
  
      else:
          raise ValueError(
 -            '`method` must be "standard", "average",'
 -            ' "balanced", or "binary". Got "%s".' % method
-+            f'`method` must be "standard", "average", "balanced", or "binary". Got "{method}".'
++            'method must be "standard", "average", "balanced", or "binary". '
++            f'Got "{method}".'
          )
 diff --git a/mlxtend/evaluate/bias_variance_decomp.py b/mlxtend/evaluate/bias_variance_decomp.py
 index 7bca4b69..195446f9 100644
@@ -131,9 +466,18 @@ index d66096a9..34b44b5b 100644
  
          Parameters
 diff --git a/mlxtend/evaluate/bootstrap_point632.py b/mlxtend/evaluate/bootstrap_point632.py
-index 315e58c3..f3b6b658 100644
+index 315e58c3..15deaa7d 100644
 --- a/mlxtend/evaluate/bootstrap_point632.py
 +++ b/mlxtend/evaluate/bootstrap_point632.py
+@@ -27,7 +27,7 @@ def _check_arrays(X, y=None):
+             raise ValueError("y must be a 1D array.")
+ 
+     if not len(y) == X.shape[0]:
+-        raise ValueError("X and y must contain the" "same number of samples")
++        raise ValueError("X and y must contain the same number of samples")
+ 
+ 
+ def no_information_rate(targets, predictions, loss_fn):
 @@ -53,7 +53,7 @@ def bootstrap_point632_score(
      predict_proba=False,
      random_seed=None,
@@ -168,6 +512,15 @@ index 315e58c3..f3b6b658 100644
          )
  
      # Pandas compatibility
+@@ -184,7 +184,7 @@ def bootstrap_point632_score(
+             scoring_func = mse
+         else:
+             raise AttributeError(
+-                "Estimator type undefined." "Please provide a scoring_func argument."
++                "Estimator type undefined. Please provide a scoring_func argument."
+             )
+ 
+     # determine which prediction function to use
 @@ -205,7 +205,7 @@ def bootstrap_point632_score(
      cnt = 0
  
@@ -177,6 +530,19 @@ index 315e58c3..f3b6b658 100644
  
          # get the prediction probability
          # for binary class uses the last column
+diff --git a/mlxtend/evaluate/cochrans_q.py b/mlxtend/evaluate/cochrans_q.py
+index b6645cc8..655e0bfe 100644
+--- a/mlxtend/evaluate/cochrans_q.py
++++ b/mlxtend/evaluate/cochrans_q.py
+@@ -50,7 +50,7 @@ def cochrans_q(y_target, *y_model_predictions):
+ 
+     if len(model_lens) > 1:
+         raise ValueError(
+-            "Each prediction array must have the " "same number of samples."
++            "Each prediction array must have the same number of samples."
+         )
+ 
+     if num_models < 2:
 diff --git a/mlxtend/evaluate/confusion_matrix.py b/mlxtend/evaluate/confusion_matrix.py
 index f91b9754..5b6c190a 100644
 --- a/mlxtend/evaluate/confusion_matrix.py
@@ -190,6 +556,37 @@ index f91b9754..5b6c190a 100644
          )
  
      if binary:
+diff --git a/mlxtend/evaluate/f_test.py b/mlxtend/evaluate/f_test.py
+index b6406835..bad4e7b0 100644
+--- a/mlxtend/evaluate/f_test.py
++++ b/mlxtend/evaluate/f_test.py
+@@ -52,7 +52,7 @@ def ftest(y_target, *y_model_predictions):
+ 
+     if len(model_lens) > 1:
+         raise ValueError(
+-            "Each prediction array must have the " "same number of samples."
++            "Each prediction array must have the same number of samples."
+         )
+ 
+     if num_models < 2:
+@@ -174,7 +174,7 @@ def combined_ftest_5x2cv(estimator1, estimator2, X, y, scoring=None, random_seed
+         elif estimator1._estimator_type == "regressor":
+             scoring = "r2"
+         else:
+-            raise AttributeError("Estimator must " "be a Classifier or Regressor.")
++            raise AttributeError("Estimator must be a Classifier or Regressor.")
+     if isinstance(scoring, str):
+         scorer = get_scorer(scoring)
+     else:
+@@ -191,7 +191,7 @@ def combined_ftest_5x2cv(estimator1, estimator2, X, y, scoring=None, random_seed
+         score_diff = est1_score - est2_score
+         return score_diff
+ 
+-    for i in range(5):
++    for _ in range(5):
+         randint = rng.randint(low=0, high=32767)
+         X_1, X_2, y_1, y_2 = train_test_split(X, y, test_size=0.5, random_state=randint)
+ 
 diff --git a/mlxtend/evaluate/holdout.py b/mlxtend/evaluate/holdout.py
 index b960c738..7c903cef 100644
 --- a/mlxtend/evaluate/holdout.py
@@ -221,10 +618,56 @@ index b960c738..7c903cef 100644
          """Returns the number of splitting iterations in the cross-validator
  
          Parameters
+diff --git a/mlxtend/evaluate/lift_score.py b/mlxtend/evaluate/lift_score.py
+index e6864363..edfac789 100644
+--- a/mlxtend/evaluate/lift_score.py
++++ b/mlxtend/evaluate/lift_score.py
+@@ -57,7 +57,7 @@ def lift_score(y_target, y_predicted, binary=True, positive_label=1):
+ 
+     if len(pred_tmp) != len(targ_tmp):
+         raise AttributeError(
+-            "`y_target` and `y_predicted`" "don't have the same number of elements."
++            "`y_target` and `y_predicted` don't have the same number of elements."
+         )
+     if binary:
+         targ_tmp = np.where(targ_tmp != positive_label, 0, 1)
+@@ -68,7 +68,7 @@ def lift_score(y_target, y_predicted, binary=True, positive_label=1):
+ 
+     if len(binary_check_targ_tmp) or len(binary_check_pred_tmp):
+         raise AttributeError(
+-            "`y_target` and `y_predicted`" " have different elements from 0 and 1."
++            "`y_target` and `y_predicted` have different elements from 0 and 1."
+         )
+ 
+     return support(targ_tmp, pred_tmp) / (support(targ_tmp) * support(pred_tmp))
 diff --git a/mlxtend/evaluate/mcnemar.py b/mlxtend/evaluate/mcnemar.py
-index aca09d6e..1266adcf 100644
+index aca09d6e..895c3655 100644
 --- a/mlxtend/evaluate/mcnemar.py
 +++ b/mlxtend/evaluate/mcnemar.py
+@@ -45,12 +45,12 @@ def mcnemar_table(y_target, y_model1, y_model2):
+ 
+     if y_target.shape[0] != y_model1.shape[0]:
+         raise ValueError(
+-            "y_target and y_model1 contain a different number" " of elements."
++            "y_target and y_model1 contain a different number of elements."
+         )
+ 
+     if y_target.shape[0] != y_model2.shape[0]:
+         raise ValueError(
+-            "y_target and y_model2 contain a different number" " of elements."
++            "y_target and y_model2 contain a different number of elements."
+         )
+ 
+     m1_vs_true = (y_target == y_model1).astype(int)
+@@ -133,7 +133,7 @@ def mcnemar_tables(y_target, *y_model_predictions):
+ 
+     if len(model_lens) > 1:
+         raise ValueError(
+-            "Each prediction array must have the " "same number of samples."
++            "Each prediction array must have the same number of samples."
+         )
+ 
+     num_models = len(y_model_predictions)
 @@ -155,7 +155,7 @@ def mcnemar_tables(y_target, *y_model_predictions):
          tb[1, 0] = np.sum(minus_true == -1)
          tb[1, 1] = np.sum(plus_true == 0)
@@ -235,7 +678,7 @@ index aca09d6e..1266adcf 100644
  
      return tables
 diff --git a/mlxtend/evaluate/permutation.py b/mlxtend/evaluate/permutation.py
-index f1a0d52b..00a10f4e 100644
+index f1a0d52b..8b3d60e6 100644
 --- a/mlxtend/evaluate/permutation.py
 +++ b/mlxtend/evaluate/permutation.py
 @@ -87,7 +87,7 @@ def permutation_test(
@@ -247,6 +690,15 @@ index f1a0d52b..00a10f4e 100644
          )
  
      if isinstance(func, str):
+@@ -120,7 +120,7 @@ def permutation_test(
+ 
+     if paired:
+         if m != n:
+-            raise ValueError("x and y must have the same" " length if `paired=True`")
++            raise ValueError("x and y must have the same length if `paired=True`")
+         sample_x = np.empty(m)
+         sample_y = np.empty(n)
+ 
 diff --git a/mlxtend/evaluate/scoring.py b/mlxtend/evaluate/scoring.py
 index 38c9fe96..f88cc66e 100644
 --- a/mlxtend/evaluate/scoring.py
@@ -288,7 +740,7 @@ index fb2d9716..a159328a 100644
      ax.set_xlabel(xlabel="Sample index", fontsize=13)
      ax.set_ylabel(ylabel="CV iteration", fontsize=13)
 diff --git a/mlxtend/evaluate/ttest.py b/mlxtend/evaluate/ttest.py
-index 677de7ed..e60076cc 100644
+index 677de7ed..cefa4624 100644
 --- a/mlxtend/evaluate/ttest.py
 +++ b/mlxtend/evaluate/ttest.py
 @@ -84,7 +84,7 @@ def paired_ttest_resampled(
@@ -300,8 +752,434 @@ index 677de7ed..e60076cc 100644
          )
  
      rng = np.random.RandomState(random_seed)
+@@ -95,14 +95,14 @@ def paired_ttest_resampled(
+         elif estimator1._estimator_type == "regressor":
+             scoring = "r2"
+         else:
+-            raise AttributeError("Estimator must " "be a Classifier or Regressor.")
++            raise AttributeError("Estimator must be a Classifier or Regressor.")
+     if isinstance(scoring, str):
+         scorer = get_scorer(scoring)
+     else:
+         scorer = scoring
+ 
+     score_diff = []
+-    for i in range(num_rounds):
++    for _ in range(num_rounds):
+         randint = rng.randint(low=0, high=32767)
+ 
+         X_train, X_test, y_train, y_test = train_test_split(
+@@ -203,7 +203,7 @@ def paired_ttest_kfold_cv(
+         elif estimator1._estimator_type == "regressor":
+             scoring = "r2"
+         else:
+-            raise AttributeError("Estimator must " "be a Classifier or Regressor.")
++            raise AttributeError("Estimator must be a Classifier or Regressor.")
+     if isinstance(scoring, str):
+         scorer = get_scorer(scoring)
+     else:
+@@ -311,7 +311,7 @@ def paired_ttest_5x2cv(estimator1, estimator2, X, y, scoring=None, random_seed=N
+         score_diff = est1_score - est2_score
+         return score_diff
+ 
+-    for i in range(5):
++    for _ in range(5):
+         randint = rng.randint(low=0, high=32767)
+         X_1, X_2, y_1, y_2 = train_test_split(X, y, test_size=0.5, random_state=randint)
+ 
+diff --git a/mlxtend/externals/adjust_text.py b/mlxtend/externals/adjust_text.py
+index ebb2675e..fab0f611 100644
+--- a/mlxtend/externals/adjust_text.py
++++ b/mlxtend/externals/adjust_text.py
+@@ -634,7 +634,7 @@ def adjust_text(
+                 "Can't get bounding boxes from add_objects - is'\
+                              it a flat list of matplotlib objects?"
+             )
+-            return
++
+         text_from_objects = True
+     for text in texts:
+         text.set_va(va)
+@@ -643,7 +643,7 @@ def adjust_text(
+         if add_step_numbers:
+             plt.title("Before")
+         plt.savefig(
+-            "%s%s.%s" % (save_prefix, "000a", save_format), format=save_format, dpi=150
++            f"{save_prefix}000a.{save_format}", format=save_format, dpi=150
+         )
+     elif on_basemap:
+         ax.draw(r)
+@@ -667,7 +667,7 @@ def adjust_text(
+         if add_step_numbers:
+             plt.title("Autoaligned")
+         plt.savefig(
+-            "%s%s.%s" % (save_prefix, "000b", save_format), format=save_format, dpi=150
++            f"{save_prefix}000b.{save_format}", format=save_format, dpi=150
+         )
+     elif on_basemap:
+         ax.draw(r)
+@@ -735,7 +735,7 @@ def adjust_text(
+             if add_step_numbers:
+                 plt.title(i + 1)
+             plt.savefig(
+-                "%s%s.%s" % (save_prefix, "{0:03}".format(i + 1), save_format),
++                f"{save_prefix}{i + 1:03}.{save_format}",
+                 format=save_format,
+                 dpi=150,
+             )
+@@ -768,7 +768,7 @@ def adjust_text(
+         if add_step_numbers:
+             plt.title(i + 1)
+             plt.savefig(
+-                "%s%s.%s" % (save_prefix, "{0:03}".format(i + 1), save_format),
++                f"{save_prefix}{i + 1:03}.{save_format}",
+                 format=save_format,
+                 dpi=150,
+             )
+diff --git a/mlxtend/externals/estimator_checks.py b/mlxtend/externals/estimator_checks.py
+index 4ac4a36f..5569cab9 100644
+--- a/mlxtend/externals/estimator_checks.py
++++ b/mlxtend/externals/estimator_checks.py
+@@ -65,10 +65,10 @@ def check_is_fitted(estimator, attributes, msg=None, all_or_any=all):
+         )
+ 
+     if not hasattr(estimator, "fit"):
+-        raise TypeError("%s is not an estimator instance." % (estimator))
++        raise TypeError(f"{estimator} is not an estimator instance.")
+ 
+     if not isinstance(attributes, (list, tuple)):
+         attributes = [attributes]
+ 
+     if not all_or_any([hasattr(estimator, attr) for attr in attributes]):
+-        raise NotFittedError(msg % {"name": type(estimator).__name__})
++        raise NotFittedError(f"{msg} {type(estimator).__name__}")
+diff --git a/mlxtend/externals/name_estimators.py b/mlxtend/externals/name_estimators.py
+index fe4b38b5..076fd8dd 100644
+--- a/mlxtend/externals/name_estimators.py
++++ b/mlxtend/externals/name_estimators.py
+@@ -25,7 +25,7 @@ def _name_estimators(estimators):
+     for i in reversed(range(len(estimators))):
+         name = names[i]
+         if name in namecount:
+-            names[i] += "-%d" % namecount[name]
++            names[i] += f"-{namecount[name]}"
+             namecount[name] -= 1
+ 
+     return list(zip(names, estimators))
+diff --git a/mlxtend/externals/pyprind/prog_class.py b/mlxtend/externals/pyprind/prog_class.py
+index b814b6a2..bfc32226 100755
+--- a/mlxtend/externals/pyprind/prog_class.py
++++ b/mlxtend/externals/pyprind/prog_class.py
+@@ -54,7 +54,7 @@ class Prog:
+         if monitor:
+             if not psutil_import:
+                 raise ValueError(
+-                    "psutil package is required when using" " the `monitor` option."
++                    "psutil package is required when using the `monitor` option."
+                 )
+             else:
+                 self.process = psutil.Process()
+@@ -168,7 +168,7 @@ class Prog:
+     def _print_title(self):
+         """Prints tracking title at initialization."""
+         if self.title:
+-            self._stream_out("{}\n".format(self.title))
++            self._stream_out(f"{self.title}\n")
+             self._stream_flush()
+ 
+     def _cache_eta(self):
+@@ -178,7 +178,7 @@ class Prog:
+ 
+     def _cache_item_id(self):
+         """Prints an item id behind the tracking object."""
+-        self._cached_output += " | Item ID: %s" % self.item_id
++        self._cached_output += f" | Item ID: {self.item_id}"
+ 
+     def __repr__(self):
+         str_start = time.strftime("%m/%d/%Y %H:%M:%S", time.localtime(self.start))
+@@ -186,11 +186,10 @@ class Prog:
+         self._stream_flush()
+ 
+         time_info = (
+-            "Title: {}\n"
+-            "  Started: {}\n"
+-            "  Finished: {}\n"
+-            "  Total time elapsed: ".format(self.title, str_start, str_end)
+-            + self._get_time(self.total_time)
++            f"Title: {self.title}\n"
++            f"  Started: {str_start}\n"
++            f"  Finished: {str_end}\n"
++            f"  Total time elapsed: {self._get_time(self.total_time)}"
+         )
+         if self.monitor:
+             try:
+@@ -200,11 +199,9 @@ class Prog:
+                 cpu_total = self.process.get_cpu_percent()
+                 mem_total = self.process.get_memory_percent()
+ 
+-            cpu_mem_info = "  CPU %: {:.2f}\n" "  Memory %: {:.2f}".format(
+-                cpu_total, mem_total
+-            )
++            cpu_mem_info = f"  CPU %: {cpu_total:.2f}\n  Memory %: {mem_total:.2f}"
+ 
+-            return time_info + "\n" + cpu_mem_info
++            return f"{time_info}\n{cpu_mem_info}"
+         else:
+             return time_info
+ 
+diff --git a/mlxtend/externals/pyprind/progbar.py b/mlxtend/externals/pyprind/progbar.py
+index b5ffc374..0f3a5d73 100755
+--- a/mlxtend/externals/pyprind/progbar.py
++++ b/mlxtend/externals/pyprind/progbar.py
+@@ -83,9 +83,8 @@ class ProgBar(Prog):
+ 
+     def _cache_progress_bar(self, progress):
+         remaining = self.bar_width - progress
+-        self._cached_output += "0% [{}{}] 100%".format(
+-            self.bar_char * int(progress), " " * int(remaining)
+-        )
++        self._cached_output += (f"0% [{self.bar_char * int(progress)}"
++                       f"{' ' * int(remaining)}] 100%")
+ 
+     def _print(self, force_flush=False):
+         progress = floor(self._calc_percent() / 100 * self.bar_width)
+@@ -102,7 +101,7 @@ class ProgBar(Prog):
+                 self._cache_eta()
+             if self.item_id:
+                 self._cache_item_id()
+-            self._stream_out("\r%s" % self._cached_output)
++            self._stream_out(f"\r{self._cached_output}")
+             self._stream_flush()
+             self._cached_output = ""
+         self.last_progress = progress
+diff --git a/mlxtend/externals/pyprind/progpercent.py b/mlxtend/externals/pyprind/progpercent.py
+index e8fa6b60..02dc16c4 100755
+--- a/mlxtend/externals/pyprind/progpercent.py
++++ b/mlxtend/externals/pyprind/progpercent.py
+@@ -63,7 +63,7 @@ class ProgPercent(Prog):
+                 self.process.get_memory_percent()
+ 
+     def _cache_percent_indicator(self, last_progress):
+-        self._cached_output += "[%3d %%]" % (last_progress)
++        self._cached_output += f"[{last_progress:3d}%]"
+ 
+     def _print(self, force_flush=False):
+         """Prints formatted percentage and tracked time to the screen."""
+@@ -86,6 +86,6 @@ class ProgPercent(Prog):
+                 self._cache_eta()
+             if self.item_id:
+                 self._cache_item_id()
+-            self._stream_out("\r%s" % self._cached_output)
++            self._stream_out(f"\r{self._cached_output}")
+             self._stream_flush()
+             self._cached_output = ""
+diff --git a/mlxtend/externals/signature_py27.py b/mlxtend/externals/signature_py27.py
+index b5191095..c6008397 100644
+--- a/mlxtend/externals/signature_py27.py
++++ b/mlxtend/externals/signature_py27.py
+@@ -55,7 +55,7 @@ def signature(obj):
+     """Get a signature object for the passed callable."""
+ 
+     if not callable(obj):
+-        raise TypeError("{0!r} is not a callable object".format(obj))
++        raise TypeError(f"{obj!r} is not a callable object")
+ 
+     if isinstance(obj, types.MethodType):
+         sig = signature(obj.__func__)
+@@ -102,7 +102,7 @@ def signature(obj):
+         try:
+             ba = sig.bind_partial(*partial_args, **partial_keywords)
+         except TypeError:
+-            msg = "partial object {0!r} has incorrect arguments".format(obj)
++            msg = f"partial object {obj!r} has incorrect arguments"
+             raise ValueError(msg)
+ 
+         for arg_name, arg_value in ba.arguments.items():
+@@ -172,10 +172,10 @@ def signature(obj):
+ 
+     if isinstance(obj, types.BuiltinFunctionType):
+         # Raise a nicer error message for builtins
+-        msg = "no signature found for builtin function {0!r}".format(obj)
++        msg = f"no signature found for builtin function {obj!r}"
+         raise ValueError(msg)
+ 
+-    raise ValueError("callable {0!r} is not supported by signature".format(obj))
++    raise ValueError(f"callable {obj!r} is not supported by signature")
+ 
+ 
+ class _void(object):
+@@ -196,7 +196,7 @@ class _ParameterKind(int):
+         return self._name
+ 
+     def __repr__(self):
+-        return "<_ParameterKind: {0!r}>".format(self._name)
++        return f"<_ParameterKind: {self._name!r}>"
+ 
+ 
+ _POSITIONAL_ONLY = _ParameterKind(0, name="POSITIONAL_ONLY")
+@@ -251,7 +251,7 @@ class Parameter(object):
+ 
+         if default is not _empty:
+             if kind in (_VAR_POSITIONAL, _VAR_KEYWORD):
+-                msg = "{0} parameters cannot have default values".format(kind)
++                msg = f"{kind} parameters cannot have default values"
+                 raise ValueError(msg)
+         self._default = default
+         self._annotation = annotation
+@@ -259,13 +259,13 @@ class Parameter(object):
+         if name is None:
+             if kind != _POSITIONAL_ONLY:
+                 raise ValueError(
+-                    "None is not a valid name for a " "non-positional-only parameter"
++                    "None is not a valid name for a non-positional-only parameter"
+                 )
+             self._name = name
+         else:
+             name = str(name)
+             if kind != _POSITIONAL_ONLY and not re.match(r"[a-z_]\w*$", name, re.I):
+-                msg = "{0!r} is not a valid parameter name".format(name)
++                msg = f"{name!r} is not a valid parameter name"
+                 raise ValueError(msg)
+             self._name = name
+ 
+@@ -327,14 +327,14 @@ class Parameter(object):
+         if kind == _POSITIONAL_ONLY:
+             if formatted is None:
+                 formatted = ""
+-            formatted = "<{0}>".format(formatted)
++            formatted = f"<{formatted}>"
+ 
+         # Add annotation and default value
+         if self._annotation is not _empty:
+-            formatted = "{0}:{1}".format(formatted, formatannotation(self._annotation))
++            formatted = f"{formatted}:{formatannotation(self._annotation)}"
+ 
+         if self._default is not _empty:
+-            formatted = "{0}={1}".format(formatted, repr(self._default))
++            formatted = f"{formatted}={repr(self._default)}"
+ 
+         if kind == _VAR_POSITIONAL:
+             formatted = "*" + formatted
+@@ -344,12 +344,10 @@ class Parameter(object):
+         return formatted
+ 
+     def __repr__(self):
+-        return "<{0} at {1:#x} {2!r}>".format(
+-            self.__class__.__name__, id(self), self.name
+-        )
++        return f"<{self.__class__.__name__} at {id(self):#x} {self.name!r}>"
+ 
+     def __hash__(self):
+-        msg = "unhashable type: '{0}'".format(self.__class__.__name__)
++        msg = f"unhashable type: '{self.__class__.__name__}'"
+         raise TypeError(msg)
+ 
+     def __eq__(self, other):
+@@ -448,7 +446,7 @@ class BoundArguments(object):
+         return kwargs
+ 
+     def __hash__(self):
+-        msg = "unhashable type: '{0}'".format(self.__class__.__name__)
++        msg = f"unhashable type: '{self.__class__.__name__}'"
+         raise TypeError(msg)
+ 
+     def __eq__(self, other):
+@@ -521,7 +519,7 @@ class Signature(object):
+                         param = param.replace(name=name)
+ 
+                     if name in params:
+-                        msg = "duplicate parameter name: {0!r}".format(name)
++                        raise ValueError(f"duplicate parameter name: {name!r}")
+                         raise ValueError(msg)
+                     params[name] = param
+             else:
+@@ -535,7 +533,7 @@ class Signature(object):
+         """Constructs Signature for the given python function"""
+ 
+         if not isinstance(func, types.FunctionType):
+-            raise TypeError("{0!r} is not a Python function".format(func))
++            raise TypeError(f"{func!r} is not a Python function")
+ 
+         Parameter = cls._parameter_cls
+ 
+@@ -639,7 +637,7 @@ class Signature(object):
+         return type(self)(parameters, return_annotation=return_annotation)
+ 
+     def __hash__(self):
+-        msg = "unhashable type: '{0}'".format(self.__class__.__name__)
++        msg = f"unhashable type: '{self.__class__.__name__}'"
+         raise TypeError(msg)
+ 
+     def __eq__(self, other):
+@@ -715,11 +713,8 @@ class Signature(object):
+                         break
+                     elif param.name in kwargs:
+                         if param.kind == _POSITIONAL_ONLY:
+-                            msg = (
+-                                "{arg!r} parameter is positional only, "
+-                                "but was passed as a keyword"
+-                            )
+-                            msg = msg.format(arg=param.name)
++                            msg = (f"{param.name!r} parameter is positional only, "
++                                f"but was passed as a keyword")
+                             raise TypeError(msg)
+                         parameters_ex = (param,)
+                         break
+@@ -734,8 +729,7 @@ class Signature(object):
+                             parameters_ex = (param,)
+                             break
+                         else:
+-                            msg = "{arg!r} parameter lacking default value"
+-                            msg = msg.format(arg=param.name)
++                            msg = f"{param.name!r} parameter lacking default value"
+                             raise TypeError(msg)
+             else:
+                 # We have a positional argument to process
+@@ -760,8 +754,7 @@ class Signature(object):
+ 
+                     if param.name in kwargs:
+                         raise TypeError(
+-                            "multiple values for argument "
+-                            "{arg!r}".format(arg=param.name)
++                            f"multiple values for argument '{param.name}'"
+                         )
+ 
+                     arguments[param.name] = arg_val
+@@ -775,8 +768,8 @@ class Signature(object):
+                 # Signature object (but let's have this check here
+                 # to ensure correct behaviour just in case)
+                 raise TypeError(
+-                    "{arg!r} parameter is positional only, "
+-                    "but was passed as a keyword".format(arg=param.name)
++                    f"{param.name!r} parameter is positional only, "
++                    "but was passed as a keyword"
+                 )
+ 
+             if param.kind == _VAR_KEYWORD:
+@@ -798,7 +791,7 @@ class Signature(object):
+                     and param.default is _empty
+                 ):
+                     raise TypeError(
+-                        "{arg!r} parameter lacking default value".format(arg=param_name)
++                        f"{param_name!r} parameter lacking default value"
+                     )
+ 
+             else:
+@@ -849,10 +842,10 @@ class Signature(object):
+ 
+             result.append(formatted)
+ 
+-        rendered = "({0})".format(", ".join(result))
++        rendered = f"({' '.join(result)})"
+ 
+         if self.return_annotation is not _empty:
+             anno = formatannotation(self.return_annotation)
+-            rendered += " -> {0}".format(anno)
++            rendered += f" -> {anno}"
+ 
+         return rendered
 diff --git a/mlxtend/feature_selection/exhaustive_feature_selector.py b/mlxtend/feature_selection/exhaustive_feature_selector.py
-index bbbd1f84..113ef6f2 100644
+index bbbd1f84..488bec53 100644
 --- a/mlxtend/feature_selection/exhaustive_feature_selector.py
 +++ b/mlxtend/feature_selection/exhaustive_feature_selector.py
 @@ -237,7 +237,7 @@ class ExhaustiveFeatureSelector(BaseEstimator, MetaEstimatorMixin):
@@ -322,7 +1200,27 @@ index bbbd1f84..113ef6f2 100644
              Parameters to pass to to the fit method of classifier.
  
          Returns
-@@ -448,7 +448,7 @@ class ExhaustiveFeatureSelector(BaseEstimator, MetaEstimatorMixin):
+@@ -287,7 +287,8 @@ class ExhaustiveFeatureSelector(BaseEstimator, MetaEstimatorMixin):
+         fixed_feature_types = {type(i) for i in self.fixed_features_}
+         if len(fixed_feature_types) > 1:
+             raise ValueError(
+-                f"fixed_features values must have the same type. Found {fixed_feature_types}."
++                f"fixed_features values must have the same type. "
++                f"Found {fixed_feature_types}."
+             )
+ 
+         if len(self.fixed_features_) > 0 and isinstance(self.fixed_features_[0], str):
+@@ -321,7 +322,8 @@ class ExhaustiveFeatureSelector(BaseEstimator, MetaEstimatorMixin):
+         }
+         if len(feature_group_types) > 1:
+             raise ValueError(
+-                f"feature_group values must have the same type. Found {feature_group_types}."
++                f"feature_group values must have the same type. "
++                f"Found {feature_group_types}."
+             )
+ 
+         if isinstance(self.feature_groups[0][0], str):
+@@ -448,7 +450,7 @@ class ExhaustiveFeatureSelector(BaseEstimator, MetaEstimatorMixin):
                      list(set(c).union(self.fixed_features_group_set)),
                      groups=groups,
                      feature_groups=self.feature_groups,
@@ -331,7 +1229,16 @@ index bbbd1f84..113ef6f2 100644
                  )
                  for c in candidates
              )
-@@ -483,7 +483,7 @@ class ExhaustiveFeatureSelector(BaseEstimator, MetaEstimatorMixin):
+@@ -463,7 +465,7 @@ class ExhaustiveFeatureSelector(BaseEstimator, MetaEstimatorMixin):
+                 }
+ 
+                 if self.print_progress:
+-                    sys.stderr.write("\rFeatures: %d/%d" % (iteration + 1, all_comb))
++                    sys.stderr.write(f"\rFeatures: {iteration + 1}/{all_comb}")
+                     sys.stderr.flush()
+ 
+                 if self._TESTING_INTERRUPT_MODE:  # this is just for testing
+@@ -483,7 +485,7 @@ class ExhaustiveFeatureSelector(BaseEstimator, MetaEstimatorMixin):
          return self
  
      def finalize_fit(self):
@@ -340,7 +1247,7 @@ index bbbd1f84..113ef6f2 100644
          for c in self.subsets_:
              if self.subsets_[c]["avg_score"] > max_score:
                  best_subset = c
-@@ -517,7 +517,7 @@ class ExhaustiveFeatureSelector(BaseEstimator, MetaEstimatorMixin):
+@@ -517,7 +519,7 @@ class ExhaustiveFeatureSelector(BaseEstimator, MetaEstimatorMixin):
          X_, _ = _preprocess(X)
          return X_[:, self.best_idx_]
  
@@ -349,7 +1256,7 @@ index bbbd1f84..113ef6f2 100644
          """Fit to training data and return the best selected features from X.
  
          Parameters
-@@ -532,7 +532,7 @@ class ExhaustiveFeatureSelector(BaseEstimator, MetaEstimatorMixin):
+@@ -532,7 +534,7 @@ class ExhaustiveFeatureSelector(BaseEstimator, MetaEstimatorMixin):
          groups : array-like, with shape (n_samples,), optional
              Group labels for the samples used while splitting the dataset into
              train/test set. Passed to the fit method of the cross-validator.
@@ -358,7 +1265,7 @@ index bbbd1f84..113ef6f2 100644
              Parameters to pass to to the fit method of classifier.
  
          Returns
-@@ -540,7 +540,7 @@ class ExhaustiveFeatureSelector(BaseEstimator, MetaEstimatorMixin):
+@@ -540,7 +542,7 @@ class ExhaustiveFeatureSelector(BaseEstimator, MetaEstimatorMixin):
          Feature subset of X, shape={n_samples, k_features}
  
          """
@@ -367,11 +1274,26 @@ index bbbd1f84..113ef6f2 100644
          return self.transform(X)
  
      def get_metric_dict(self, confidence_interval=0.95):
+@@ -586,5 +588,5 @@ class ExhaustiveFeatureSelector(BaseEstimator, MetaEstimatorMixin):
+     def _check_fitted(self):
+         if not self.fitted:
+             raise AttributeError(
+-                "ExhaustiveFeatureSelector has not been" " fitted, yet."
++                "ExhaustiveFeatureSelector has not been fitted, yet."
+             )
 diff --git a/mlxtend/feature_selection/sequential_feature_selector.py b/mlxtend/feature_selection/sequential_feature_selector.py
-index 0a766ed1..3e4105ba 100644
+index 0a766ed1..d300d1a5 100644
 --- a/mlxtend/feature_selection/sequential_feature_selector.py
 +++ b/mlxtend/feature_selection/sequential_feature_selector.py
-@@ -301,7 +301,7 @@ class SequentialFeatureSelector(_BaseXComposition, MetaEstimatorMixin):
+@@ -297,11 +297,14 @@ class SequentialFeatureSelector(_BaseXComposition, MetaEstimatorMixin):
+             err_msg = f"{name} must be between 1 and len(feature_groups)."
+ 
+         else:  # both fixed_features and feature_groups are provided
+-            err_msg = f"{name} must be between the number of groups that appear in fixed_features and len(feature_groups)."
++            err_msg = (
++                f"{name} must be between the number of groups that appear "
++                f"in fixed_features and len(feature_groups)."
++            )
  
          return err_msg
  
@@ -380,7 +1302,7 @@ index 0a766ed1..3e4105ba 100644
          """Perform feature selection and learn model from training data.
  
          Parameters
-@@ -318,7 +318,7 @@ class SequentialFeatureSelector(_BaseXComposition, MetaEstimatorMixin):
+@@ -318,7 +321,7 @@ class SequentialFeatureSelector(_BaseXComposition, MetaEstimatorMixin):
          groups : array-like, with shape (n_samples,), optional
              Group labels for the samples used while splitting the dataset into
              train/test set. Passed to the fit method of the cross-validator.
@@ -389,7 +1311,36 @@ index 0a766ed1..3e4105ba 100644
              Additional parameters that are being passed to the estimator.
              For example, `sample_weights=weights`.
  
-@@ -521,7 +521,7 @@ class SequentialFeatureSelector(_BaseXComposition, MetaEstimatorMixin):
+@@ -352,7 +355,8 @@ class SequentialFeatureSelector(_BaseXComposition, MetaEstimatorMixin):
+         fixed_feature_types = {type(i) for i in self.fixed_features_}
+         if len(fixed_feature_types) > 1:
+             raise ValueError(
+-                f"fixed_features values must have the same type. Found {fixed_feature_types}."
++                f"fixed_features values must have the same type. "
++                f"Found {fixed_feature_types}."
+             )
+ 
+         if len(self.fixed_features_) > 0 and isinstance(self.fixed_features_[0], str):
+@@ -387,7 +391,8 @@ class SequentialFeatureSelector(_BaseXComposition, MetaEstimatorMixin):
+         }
+         if len(feature_group_types) > 1:
+             raise ValueError(
+-                f"feature_group values must have the same type. Found {feature_group_types}."
++                f"feature_group values must have the same type. "
++                f"Found {feature_group_types}."
+             )
+ 
+         if isinstance(self.feature_groups_[0][0], str):
+@@ -443,7 +448,7 @@ class SequentialFeatureSelector(_BaseXComposition, MetaEstimatorMixin):
+             and not isinstance(self.k_features, str)
+         ):
+             raise AttributeError(
+-                "k_features must be a positive integer" ", tuple, or string"
++                "k_features must be a positive integer, tuple, or string"
+             )
+ 
+         eligible_k_values_range = range(self.k_lb, self.k_ub + 1)
+@@ -521,7 +526,7 @@ class SequentialFeatureSelector(_BaseXComposition, MetaEstimatorMixin):
                  k_idx,
                  groups=groups,
                  feature_groups=self.feature_groups_,
@@ -398,7 +1349,7 @@ index 0a766ed1..3e4105ba 100644
              )
              self.subsets_[k] = {
                  "feature_idx": k_idx,
-@@ -548,7 +548,7 @@ class SequentialFeatureSelector(_BaseXComposition, MetaEstimatorMixin):
+@@ -548,7 +553,7 @@ class SequentialFeatureSelector(_BaseXComposition, MetaEstimatorMixin):
                      is_forward=self.forward,
                      groups=groups,
                      feature_groups=self.feature_groups_,
@@ -407,7 +1358,7 @@ index 0a766ed1..3e4105ba 100644
                  )
  
                  k = len(k_idx)
-@@ -599,7 +599,7 @@ class SequentialFeatureSelector(_BaseXComposition, MetaEstimatorMixin):
+@@ -599,7 +604,7 @@ class SequentialFeatureSelector(_BaseXComposition, MetaEstimatorMixin):
                              is_forward=is_float_forward,
                              groups=groups,
                              feature_groups=self.feature_groups_,
@@ -416,6 +1367,27 @@ index 0a766ed1..3e4105ba 100644
                          )
  
                          if k_score_c <= k_score:
+@@ -621,17 +626,12 @@ class SequentialFeatureSelector(_BaseXComposition, MetaEstimatorMixin):
+                             }
+ 
+                 if self.verbose == 1:
+-                    sys.stderr.write("\rFeatures: %d/%s" % (len(k_idx), k_stop))
++                    sys.stderr.write(f"\rFeatures: {len(k_idx)}/{k_stop}")
+                     sys.stderr.flush()
+                 elif self.verbose > 1:
+                     sys.stderr.write(
+-                        "\n[%s] Features: %d/%s -- score: %s"
+-                        % (
+-                            datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+-                            len(k_idx),
+-                            k_stop,
+-                            k_score,
+-                        )
++                        f"\n[{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] "
++                        f"Features: {len(k_idx)}/{k_stop} -- score: {k_score}"
+                     )
+ 
+                 if self._TESTING_INTERRUPT_MODE:  # just to test `KeyboardInterrupt`
 @@ -651,7 +651,7 @@ class SequentialFeatureSelector(_BaseXComposition, MetaEstimatorMixin):
          return self
  
@@ -425,16 +1397,19 @@ index 0a766ed1..3e4105ba 100644
          for k in self.subsets_:
              if (
                  k >= self.min_k
-@@ -662,7 +662,7 @@ class SequentialFeatureSelector(_BaseXComposition, MetaEstimatorMixin):
+@@ -662,8 +662,9 @@ class SequentialFeatureSelector(_BaseXComposition, MetaEstimatorMixin):
                  best_subset = k
  
          k_score = max_score
 -        if k_score == np.NINF:
+-            # i.e. all keys of self.subsets_ are not in interval `[self.min_k, self.max_k]`
 +        if k_score == -np.inf:
-             # i.e. all keys of self.subsets_ are not in interval `[self.min_k, self.max_k]`
++            # i.e. all keys of self.subsets_ are not in interval
++            # `[self.min_k, self.max_k]`
              # this happens if KeyboardInterrupt happens
              keys = list(self.subsets_.keys())
-@@ -710,7 +710,7 @@ class SequentialFeatureSelector(_BaseXComposition, MetaEstimatorMixin):
+             scores = [self.subsets_[k]["avg_score"] for k in keys]
+@@ -710,7 +711,7 @@ class SequentialFeatureSelector(_BaseXComposition, MetaEstimatorMixin):
          is_forward,
          groups=None,
          feature_groups=None,
@@ -443,7 +1418,7 @@ index 0a766ed1..3e4105ba 100644
      ):
          """Perform one round of feature selection. When `is_forward=True`, it is
          a forward selection that searches the `search_set` to find one feature that
-@@ -748,7 +748,7 @@ class SequentialFeatureSelector(_BaseXComposition, MetaEstimatorMixin):
+@@ -748,7 +749,7 @@ class SequentialFeatureSelector(_BaseXComposition, MetaEstimatorMixin):
          feature_groups : list or None (default: None)
              Optional argument for treating certain features as a group.
  
@@ -452,7 +1427,7 @@ index 0a766ed1..3e4105ba 100644
              Additional parameters that are being passed to the estimator.
              For example, `sample_weights=weights`.
  
-@@ -784,7 +784,7 @@ class SequentialFeatureSelector(_BaseXComposition, MetaEstimatorMixin):
+@@ -784,7 +785,7 @@ class SequentialFeatureSelector(_BaseXComposition, MetaEstimatorMixin):
                      tuple(set(p) | must_include_set),
                      groups=groups,
                      feature_groups=feature_groups,
@@ -461,7 +1436,7 @@ index 0a766ed1..3e4105ba 100644
                  )
                  for p in feature_explorer
              )
-@@ -823,7 +823,7 @@ class SequentialFeatureSelector(_BaseXComposition, MetaEstimatorMixin):
+@@ -823,7 +824,7 @@ class SequentialFeatureSelector(_BaseXComposition, MetaEstimatorMixin):
          X_, _ = _preprocess(X)
          return X_[:, self.k_feature_idx_]
  
@@ -470,7 +1445,7 @@ index 0a766ed1..3e4105ba 100644
          """Fit to training data then reduce X to its most important features.
  
          Parameters
-@@ -840,7 +840,7 @@ class SequentialFeatureSelector(_BaseXComposition, MetaEstimatorMixin):
+@@ -840,7 +841,7 @@ class SequentialFeatureSelector(_BaseXComposition, MetaEstimatorMixin):
          groups : array-like, with shape (n_samples,), optional
              Group labels for the samples used while splitting the dataset into
              train/test set. Passed to the fit method of the cross-validator.
@@ -479,7 +1454,7 @@ index 0a766ed1..3e4105ba 100644
              Additional parameters that are being passed to the estimator.
              For example, `sample_weights=weights`.
  
-@@ -849,7 +849,7 @@ class SequentialFeatureSelector(_BaseXComposition, MetaEstimatorMixin):
+@@ -849,7 +850,7 @@ class SequentialFeatureSelector(_BaseXComposition, MetaEstimatorMixin):
          Reduced feature subset of X, shape={n_samples, k_features}
  
          """
@@ -488,6 +1463,13 @@ index 0a766ed1..3e4105ba 100644
          return self.transform(X)
  
      def get_metric_dict(self, confidence_interval=0.95):
+@@ -895,5 +896,5 @@ class SequentialFeatureSelector(_BaseXComposition, MetaEstimatorMixin):
+     def _check_fitted(self):
+         if not self.fitted:
+             raise AttributeError(
+-                "SequentialFeatureSelector has not been" " fitted, yet."
++                "SequentialFeatureSelector has not been fitted, yet."
+             )
 diff --git a/mlxtend/feature_selection/tests/test_exhaustive_feature_selector.py b/mlxtend/feature_selection/tests/test_exhaustive_feature_selector.py
 index 012413e2..ebade55d 100644
 --- a/mlxtend/feature_selection/tests/test_exhaustive_feature_selector.py
@@ -584,10 +1566,329 @@ index 7d5ea6d1..bd8c5977 100644
              try:
                  if extensions[idx + 1] == "" or ext == extensions[idx + 1]:
                      groups[basename].append(f)
+diff --git a/mlxtend/frequent_patterns/apriori.py b/mlxtend/frequent_patterns/apriori.py
+index 13384fa8..4f6fb1b3 100644
+--- a/mlxtend/frequent_patterns/apriori.py
++++ b/mlxtend/frequent_patterns/apriori.py
+@@ -233,9 +233,9 @@ def apriori(
+ 
+     if min_support <= 0.0:
+         raise ValueError(
+-            "`min_support` must be a positive "
+-            "number within the interval `(0, 1]`. "
+-            "Got %s." % min_support
++            f"`min_support` must be a positive "
++            f"number within the interval `(0, 1]`. "
++            f"Got {min_support}."
+         )
+ 
+     fpc.valid_input_check(df)
+@@ -279,9 +279,9 @@ def apriori(
+                 break
+             if verbose:
+                 print(
+-                    "\rProcessing %d combinations | Sampling itemset size %d"
+-                    % (combin.size, next_max_itemset),
+-                    end="",
++                    f"\rProcessing {combin.size} combinations | "
++                    f"Sampling itemset size {next_max_itemset}",
++                    end=""
+                 )
+ 
+             itemset_dict[next_max_itemset] = combin[:, 1:]
+@@ -296,8 +296,8 @@ def apriori(
+                 break
+             if verbose:
+                 print(
+-                    "\rProcessing %d combinations | Sampling itemset size %d"
+-                    % (combin.size, next_max_itemset),
++                    f"\rProcessing {combin.size} combinations | "
++                    f"Sampling itemset size {next_max_itemset}",
+                     end="",
+                 )
+ 
+diff --git a/mlxtend/frequent_patterns/association_rules.py b/mlxtend/frequent_patterns/association_rules.py
+index 16cba9b3..7013069c 100644
+--- a/mlxtend/frequent_patterns/association_rules.py
++++ b/mlxtend/frequent_patterns/association_rules.py
+@@ -101,7 +101,7 @@ def association_rules(
+     """
+     if not df.shape[0]:
+         raise ValueError(
+-            "The input DataFrame `df` containing " "the frequent itemsets is empty."
++            "The input DataFrame `df` containing the frequent itemsets is empty."
+         )
+ 
+     # check for mandatory columns
+@@ -138,7 +138,8 @@ def association_rules(
+         numerator = metric_dict["leverage"](sAC, sA, sC)
+ 
+         with np.errstate(divide="ignore", invalid="ignore"):
+-            # ignoring the divide by 0 warning since it is addressed in the below np.where
++            # ignoring the divide by 0 warning since it is addressed
++            # in the below np.where
+             zhangs_metric = np.where(denominator == 0, 0, numerator / denominator)
+ 
+         return zhangs_metric
+@@ -178,7 +179,7 @@ def association_rules(
+     else:
+         if metric not in metric_dict.keys():
+             raise ValueError(
+-                "Metric must be 'confidence' or 'lift', got '{}'".format(metric)
++                f"Metric must be 'confidence' or 'lift', got '{metric}'"
+             )
+ 
+     # get dict of {frequent itemset} -> support
+diff --git a/mlxtend/frequent_patterns/fpcommon.py b/mlxtend/frequent_patterns/fpcommon.py
+index b1a514cd..b32a3eb4 100644
+--- a/mlxtend/frequent_patterns/fpcommon.py
++++ b/mlxtend/frequent_patterns/fpcommon.py
+@@ -125,8 +125,8 @@ def valid_input_check(df):
+             # idxs has 1 dimension with sparse data and 2 with dense data
+             val = values[tuple(loc[0] for loc in idxs)]
+             s = (
+-                "The allowed values for a DataFrame"
+-                " are True, False, 0, 1. Found value %s" % (val)
++                f"The allowed values for a DataFrame are True, False, 0, 1. "
++                f"Found value {val}"
+             )
+             raise ValueError(s)
+ 
+@@ -226,7 +226,7 @@ class FPTree(object):
+             cond_items = [str(colnames[i]) for i in self.cond_items]
+         cond_items = ", ".join(cond_items)
+         print(
+-            "\r%d itemset(s) from tree conditioned on items (%s)" % (count, cond_items),
++            f"\r{count} itemset(s) from tree conditioned on items ({cond_items})",
+             end="\n",
+         )
+ 
+diff --git a/mlxtend/frequent_patterns/fpgrowth.py b/mlxtend/frequent_patterns/fpgrowth.py
+index f2f4914d..d2ac1865 100644
+--- a/mlxtend/frequent_patterns/fpgrowth.py
++++ b/mlxtend/frequent_patterns/fpgrowth.py
+@@ -74,9 +74,9 @@ def fpgrowth(df, min_support=0.5, use_colnames=False, max_len=None, verbose=0):
+ 
+     if min_support <= 0.0:
+         raise ValueError(
+-            "`min_support` must be a positive "
+-            "number within the interval `(0, 1]`. "
+-            "Got %s." % min_support
++            f"`min_support` must be a positive "
++            f"number within the interval `(0, 1]`. "
++            f"Got {min_support}."
+         )
+ 
+     colname_map = None
+diff --git a/mlxtend/frequent_patterns/fpmax.py b/mlxtend/frequent_patterns/fpmax.py
+index c22db3f9..ce8739aa 100644
+--- a/mlxtend/frequent_patterns/fpmax.py
++++ b/mlxtend/frequent_patterns/fpmax.py
+@@ -76,9 +76,9 @@ def fpmax(df, min_support=0.5, use_colnames=False, max_len=None, verbose=0):
+ 
+     if min_support <= 0.0:
+         raise ValueError(
+-            "`min_support` must be a positive "
+-            "number within the interval `(0, 1]`. "
+-            "Got %s." % min_support
++            f"`min_support` must be a positive "
++            f"number within the interval `(0, 1]`. "
++            f"Got {min_support}."
+         )
+ 
+     colname_map = None
+diff --git a/mlxtend/frequent_patterns/hmine.py b/mlxtend/frequent_patterns/hmine.py
+index 73f2ecf9..9e2cbc51 100644
+--- a/mlxtend/frequent_patterns/hmine.py
++++ b/mlxtend/frequent_patterns/hmine.py
+@@ -79,11 +79,12 @@ def hmine(
+     fpc.valid_input_check(df)
+     if min_support <= 0.0:
+         raise ValueError(
+-            "`min_support` must be a positive "
+-            "number within the interval `(0, 1]`. "
+-            "Got %s." % min_support
++            f"`min_support` must be a positive "
++            f"number within the interval `(0, 1]`. "
++            f"Got {min_support}."
+         )
+-    # Calculate the minimum support based on the number of transactions (absolute support)
++    # Calculate the minimum support based on the number of transactions
++    # (absolute support)
+     minsup = math.ceil(min_support * len(df))
+ 
+     is_sparse = False
+@@ -208,7 +209,8 @@ def hmine_driver(
+ 
+     if verbose:
+         print(
+-            f"{len(suffixes)} itemset(s) from the suffixes on item(s) ({', '.join(single_items[item])})"
++            f"{len(suffixes)} itemset(s) from the suffixes on item(s) "
++            f"({', '.join(single_items[item])})"
+         )
+     for suffix in suffixes:
+         new_item = item.copy()
+diff --git a/mlxtend/plotting/decision_regions.py b/mlxtend/plotting/decision_regions.py
+index 4c72166a..80b58109 100644
+--- a/mlxtend/plotting/decision_regions.py
++++ b/mlxtend/plotting/decision_regions.py
+@@ -191,8 +191,8 @@ def plot_decision_regions(
+             X[:, x_index], X[:, y_index]
+         except IndexError:
+             raise IndexError(
+-                "feature_index values out of range. X.shape is {}, but "
+-                "feature_index is {}".format(X.shape, feature_index)
++                f"feature_index values out of range. X.shape is {X.shape}, but "
++                f"feature_index is {feature_index}"
+             )
+     else:
+         feature_index = (0, 1)
+@@ -222,16 +222,15 @@ def plot_decision_regions(
+         if not all(column_check):
+             missing_cols = np.argwhere(~column_check).flatten()
+             raise ValueError(
+-                "Column(s) {} need to be accounted for in either "
+-                "feature_index or filler_feature_values".format(missing_cols)
++                f"Column(s) {missing_cols} need to be accounted for in either "
++                f"feature_index or filler_feature_values"
+             )
+ 
+     # Check that the n_jobs isn't higher than the available CPU cores
+     if n_jobs > mp.cpu_count():
+         raise ValueError(
+-            "Number of defined CPU cores is more than the available resources {} ".format(
+-                mp.cpu_count()
+-            )
++            f"Number of defined CPU cores is more than the available resources "
++            f"{mp.cpu_count()}"
+         )
+ 
+     marker_gen = cycle(list(markers))
+diff --git a/mlxtend/plotting/learning_curves.py b/mlxtend/plotting/learning_curves.py
+index e1ff26b0..d21f32a7 100644
+--- a/mlxtend/plotting/learning_curves.py
++++ b/mlxtend/plotting/learning_curves.py
+@@ -140,15 +140,15 @@ def plot_learning_curves(
+ 
+     if not suppress_plot:
+         with plt.style.context(style):
+-            plt.ylabel("Performance ({})".format(scoring))
++            plt.ylabel(f"Performance ({scoring})")
+             if print_model:
+                 plt.title(
+-                    "Learning Curves\n\n{}\n".format(model), fontsize=title_fontsize
++                    f"Learning Curves\n\n{model}\n", fontsize=title_fontsize
+                 )
+             plt.legend(loc=legend_loc, numpoints=1)
+             plt.xlim([0, 110])
+-            max_y = max(max(test_errors), max(training_errors))
+-            min_y = min(min(test_errors), min(training_errors))
++            max_y = max(*test_errors, *training_errors)
++            min_y = min(*test_errors, *training_errors)
+             plt.ylim([min_y - min_y * 0.15, max_y + max_y * 0.15])
+     errors = (training_errors, test_errors)
+     return errors
+diff --git a/mlxtend/plotting/pca_correlation_graph.py b/mlxtend/plotting/pca_correlation_graph.py
+index c59d38ec..df9a211c 100644
+--- a/mlxtend/plotting/pca_correlation_graph.py
++++ b/mlxtend/plotting/pca_correlation_graph.py
+@@ -182,15 +182,11 @@ def plot_pca_correlation_graph(
+     plt.title("Correlation Circle", fontsize=figure_axis_size * 3)
+ 
+     plt.xlabel(
+-        "Dim "
+-        + str(dimensions[0])
+-        + " (%s%%)" % str(explained_var_ratio[dimensions[0] - 1])[:4],
++        f"Dim {dimensions[0]} ({str(explained_var_ratio[dimensions[0] - 1])[:4]}%)",
+         fontsize=figure_axis_size * 2,
+     )
+     plt.ylabel(
+-        "Dim "
+-        + str(dimensions[1])
+-        + " (%s%%)" % str(explained_var_ratio[dimensions[1] - 1])[:4],
++        f"Dim {dimensions[1]} ({str(explained_var_ratio[dimensions[1] - 1])[:4]}%)",
+         fontsize=figure_axis_size * 2,
+     )
+     return fig_res, corrs
+diff --git a/mlxtend/plotting/plot_confusion_matrix.py b/mlxtend/plotting/plot_confusion_matrix.py
+index 6fe67419..61db8036 100644
+--- a/mlxtend/plotting/plot_confusion_matrix.py
++++ b/mlxtend/plotting/plot_confusion_matrix.py
+@@ -95,7 +95,7 @@ def plot_confusion_matrix(
+         raise AssertionError("Both show_absolute and show_normed are False")
+     if class_names is not None and len(class_names) != len(conf_mat):
+         raise AssertionError(
+-            "len(class_names) should be equal to number of" "classes in the dataset"
++            "len(class_names) should be equal to number of classes in the dataset"
+         )
+ 
+     total_samples = conf_mat.sum(axis=1)[:, np.newaxis]
+diff --git a/mlxtend/plotting/plot_linear_regression.py b/mlxtend/plotting/plot_linear_regression.py
+index 385db3f7..f30e1683 100644
+--- a/mlxtend/plotting/plot_linear_regression.py
++++ b/mlxtend/plotting/plot_linear_regression.py
+@@ -92,9 +92,9 @@ def plot_linear_regression(
+     intercept, slope = model.intercept_, model.coef_[0]
+ 
+     if legend:
+-        leg_text = "intercept: %.2f\nslope: %.2f" % (intercept, slope)
++        leg_text = f"intercept: {intercept:.2f}\nslope: {slope:.2f}"
+         if corr_func:
+-            leg_text += "\ncorrelation: %.2f" % corr_coeff
++            leg_text += f"\ncorrelation: {corr_coeff:.2f}"
+         plt.legend([leg_text], loc="best")
+     regression_fit = (intercept, slope, corr_coeff)
+     return regression_fit
+diff --git a/mlxtend/plotting/plot_sequential_feature_selection.py b/mlxtend/plotting/plot_sequential_feature_selection.py
+index 2672f182..100d70b1 100644
+--- a/mlxtend/plotting/plot_sequential_feature_selection.py
++++ b/mlxtend/plotting/plot_sequential_feature_selection.py
+@@ -58,7 +58,7 @@ def plot_sequential_feature_selection(
+ 
+     allowed = {"std_dev", "std_err", "ci", None}
+     if kind not in allowed:
+-        raise AttributeError("kind not in %s" % allowed)
++        raise AttributeError(f"kind not in {allowed}")
+ 
+     # fig = plt.figure()
+     if figsize is not None:
+@@ -81,7 +81,7 @@ def plot_sequential_feature_selection(
+         plt.fill_between(k_feat, upper, lower, alpha=alpha, color=bcolor, lw=1)
+ 
+         if kind == "ci_bound":
+-            kind = "Confidence Interval (%d%%)" % (confidence_interval * 100)
++            kind = f"Confidence Interval ({confidence_interval * 100}%)"
+ 
+     plt.plot(k_feat, avg, color=color, marker=marker)
+     plt.ylabel(ylabel)
+diff --git a/mlxtend/plotting/scatterplotmatrix.py b/mlxtend/plotting/scatterplotmatrix.py
+index 34161d5b..7e8992ab 100644
+--- a/mlxtend/plotting/scatterplotmatrix.py
++++ b/mlxtend/plotting/scatterplotmatrix.py
+@@ -69,7 +69,7 @@ def scatterplotmatrix(
+         fig, axes = fig_axes
+ 
+     if names is None:
+-        names = ["X%d" % (i + 1) for i in range(num_features)]
++        names = [f"X{i + 1}" for i in range(num_features)]
+ 
+     for i, j in zip(*np.triu_indices_from(axes, k=1)):
+         axes[j, i].scatter(X[:, j], X[:, i], alpha=alpha, **kwargs)
 diff --git a/mlxtend/preprocessing/copy_transformer.py b/mlxtend/preprocessing/copy_transformer.py
-index 978250e0..0eb06f6c 100644
+index 978250e0..17f0aa15 100644
 --- a/mlxtend/preprocessing/copy_transformer.py
 +++ b/mlxtend/preprocessing/copy_transformer.py
+@@ -43,8 +43,8 @@ class CopyTransformer(BaseEstimator):
+             return X.copy()
+         else:
+             raise ValueError(
+-                "X must be a list or NumPy array"
+-                " or SciPy sparse array. Found %s" % type(X)
++                f"X must be a list or NumPy array"
++                f" or SciPy sparse array. Found {type(X)}"
+             )
+ 
+     def fit_transform(self, X, y=None):
 @@ -64,7 +64,7 @@ class CopyTransformer(BaseEstimator):
          """
          return self.transform(X)
@@ -611,7 +1912,7 @@ index 9b0137f8..b432504e 100644
  
          Parameters
 diff --git a/mlxtend/preprocessing/scaling.py b/mlxtend/preprocessing/scaling.py
-index f53a1e8b..8f7cb81a 100644
+index f53a1e8b..7cf1f58b 100644
 --- a/mlxtend/preprocessing/scaling.py
 +++ b/mlxtend/preprocessing/scaling.py
 @@ -11,30 +11,30 @@ import pandas as pd
@@ -669,9 +1970,12 @@ index f53a1e8b..8f7cb81a 100644
      ary_new = array.astype(float)
      if len(ary_new.shape) == 1:
          ary_new = ary_new[:, np.newaxis]
-@@ -46,12 +46,21 @@ def minmax_scaling(array, columns, min_val=0, max_val=1):
+@@ -44,14 +44,23 @@ def minmax_scaling(array, columns, min_val=0, max_val=1):
+     elif isinstance(ary_new, np.ndarray):
+         ary_newt = ary_new
      else:
-         raise AttributeError("Input array must be a pandas" "DataFrame or NumPy array")
+-        raise AttributeError("Input array must be a pandas" "DataFrame or NumPy array")
++        raise AttributeError("Input array must be a pandas DataFrame or NumPy array")
  
 -    numerator = ary_newt[:, columns] - ary_newt[:, columns].min(axis=0)
 -    denominator = ary_newt[:, columns].max(axis=0) - ary_newt[:, columns].min(axis=0)
@@ -717,7 +2021,14 @@ index f53a1e8b..8f7cb81a 100644
      ary_new = array.astype(float)
      dim = ary_new.shape
      if len(dim) == 1:
-@@ -119,8 +136,8 @@ def standardize(array, columns=None, ddof=0, return_params=False, params=None):
+@@ -113,14 +130,14 @@ def standardize(array, columns=None, ddof=0, return_params=False, params=None):
+             columns = list(range(ary_new.shape[1]))
+ 
+     else:
+-        raise AttributeError("Input array must be a pandas " "DataFrame or NumPy array")
++        raise AttributeError("Input array must be a pandas DataFrame or NumPy array")
+ 
+     if params is not None:
          parameters = params
      else:
          parameters = {
@@ -742,6 +2053,30 @@ index f53a1e8b..8f7cb81a 100644
  
      if return_params:
          return ary_newt[:, columns], parameters
+diff --git a/mlxtend/regressor/linear_regression.py b/mlxtend/regressor/linear_regression.py
+index 5ed8a8ae..1e9943df 100644
+--- a/mlxtend/regressor/linear_regression.py
++++ b/mlxtend/regressor/linear_regression.py
+@@ -89,16 +89,15 @@ class LinearRegression(_BaseModel, _IterativeModel, _Regressor):
+         if method != "sgd" and minibatches is not None:
+             raise ValueError(
+                 (
+-                    "Minibatches should be set to `None` "
+-                    "if `method` != `sgd`. Got method=`%s`."
++                    f"Minibatches should be set to `None` "
++                    f"if `method` != `sgd`. Got method=`{method}`."
+                 )
+-                % (method)
+             )
+ 
+         supported_methods = ("sgd", "direct", "svd", "qr")
+         if method not in supported_methods:
+             raise ValueError(
+-                "`method` must be in %s. Got %s." % (supported_methods, method)
++                f"`method` must be in {supported_methods}. Got {method}."
+             )
+ 
+     def _fit(self, X, y, init_params=True):
 diff --git a/mlxtend/regressor/stacking_cv_regression.py b/mlxtend/regressor/stacking_cv_regression.py
 index a1faf2ff..30e5fa4c 100644
 --- a/mlxtend/regressor/stacking_cv_regression.py
@@ -767,6 +2102,57 @@ index a1faf2ff..30e5fa4c 100644
                      pre_dispatch=self.pre_dispatch,
                  )
                  for regr in self.regr_
+diff --git a/mlxtend/regressor/stacking_regression.py b/mlxtend/regressor/stacking_regression.py
+index 295b7d7b..f9b63c9f 100644
+--- a/mlxtend/regressor/stacking_regression.py
++++ b/mlxtend/regressor/stacking_regression.py
+@@ -155,14 +155,15 @@ class StackingRegressor(_BaseXComposition, RegressorMixin, TransformerMixin):
+             self.meta_regr_ = self.meta_regressor
+ 
+         if self.verbose > 0:
+-            print("Fitting %d regressors..." % (len(self.regressors)))
++            print(f"Fitting {len(self.regressors)} regressors...")
+ 
+         for regr in self.regr_:
+             if self.verbose > 0:
+                 i = self.regr_.index(regr) + 1
+                 print(
+-                    "Fitting regressor%d: %s (%d/%d)"
+-                    % (i, _name_estimators((regr,))[0][0], i, len(self.regr_))
++                    f"Fitting regressor{i}: "
++                    f"{_name_estimators((regr,))[0][0]} "
++                    f"({i}/{len(self.regr_)})"
+                 )
+ 
+             if self.verbose > 2:
+diff --git a/mlxtend/text/names.py b/mlxtend/text/names.py
+index da03df35..20d84ee4 100644
+--- a/mlxtend/text/names.py
++++ b/mlxtend/text/names.py
+@@ -85,7 +85,7 @@ def generalize_names(name, output_sep=" ", firstname_output_letters=1):
+ 
+     spl = name.split()
+     if len(spl) > 2:
+-        name = "%s %s" % (spl[0], spl[last_pos])
++        name = f"{spl[0]} {spl[last_pos]}"
+ 
+     # remove accents
+     if sys.version_info.major == 2:
+@@ -100,10 +100,10 @@ def generalize_names(name, output_sep=" ", firstname_output_letters=1):
+     # get first and last name if applicable
+     m = re.match(r"(?P<first>\w+)\W+(?P<last>\w+)", name)
+     if m:
+-        output = "%s%s%s" % (
+-            m.group(last),
+-            output_sep,
+-            m.group(first)[:firstname_output_letters],
++        output = (
++            f"{m.group(last)}"
++            f"{output_sep}"
++            f"{m.group(first)[:firstname_output_letters]}"
+         )
+     else:
+         output = name
 diff --git a/mlxtend/text/tokenizer.py b/mlxtend/text/tokenizer.py
 index 685428f0..696da17c 100644
 --- a/mlxtend/text/tokenizer.py
@@ -785,3 +2171,108 @@ index 685428f0..696da17c 100644
  
  
  def tokenizer_emoticons(text):
+diff --git a/mlxtend/utils/checking.py b/mlxtend/utils/checking.py
+index 9907e008..2fcefc06 100644
+--- a/mlxtend/utils/checking.py
++++ b/mlxtend/utils/checking.py
+@@ -12,30 +12,30 @@ import numpy as np
+ def check_Xy(X, y, y_int=True):
+     # check types
+     if not isinstance(X, np.ndarray):
+-        raise ValueError("X must be a NumPy array. Found %s" % type(X))
++        raise ValueError(f"X must be a NumPy array. Found {type(X)}")
+     if not isinstance(y, np.ndarray):
+-        raise ValueError("y must be a NumPy array. Found %s" % type(y))
++        raise ValueError(f"y must be a NumPy array. Found {type(y)}")
+ 
+     if "int" not in str(y.dtype):
+         raise ValueError(
+-            "y must be an integer array. Found %s. "
+-            "Try passing the array as y.astype(np.int_)" % y.dtype
++            f"y must be an integer array. Found {y.dtype}. "
++            f"Try passing the array as y.astype(np.int_)"
+         )
+ 
+     if not ("float" in str(X.dtype) or "int" in str(X.dtype)):
+-        raise ValueError("X must be an integer or float array. Found %s." % X.dtype)
++        raise ValueError(f"X must be an integer or float array. Found {X.dtype}.")
+ 
+     # check dim
+     if len(X.shape) != 2:
+-        raise ValueError("X must be a 2D array. Found %s" % str(X.shape))
++        raise ValueError(f"X must be a 2D array. Found {str(X.shape)}")
+     if len(y.shape) > 1:
+-        raise ValueError("y must be a 1D array. Found %s" % str(y.shape))
++        raise ValueError(f"y must be a 1D array. Found {str(y.shape)}")
+ 
+     # check other
+     if y.shape[0] != X.shape[0]:
+         raise ValueError(
+-            "y and X must contain the same number of samples. "
+-            "Got y: %d, X: %d" % (y.shape[0], X.shape[0])
++            f"y and X must contain the same number of samples. "
++            f"Got y: {y.shape[0]}, X: {X.shape[0]}"
+         )
+ 
+ 
+@@ -63,7 +63,7 @@ def format_kwarg_dictionaries(
+     for d in [default_kwargs, user_kwargs]:
+         if not isinstance(d, (dict, type(None))):
+             raise TypeError(
+-                "d must be of type dict or None, but " "got {} instead".format(type(d))
++                f"d must be of type dict or None, but got {type(d)} instead"
+             )
+         if d is not None:
+             formatted_kwargs.update(d)
+diff --git a/mlxtend/utils/counter.py b/mlxtend/utils/counter.py
+index 82c882ab..249b5a24 100644
+--- a/mlxtend/utils/counter.py
++++ b/mlxtend/utils/counter.py
+@@ -62,7 +62,7 @@ class Counter(object):
+         else:
+             self.stream = sys.stdout
+         if isinstance(precision, int):
+-            self.precision = "%%.%df" % precision
++            self.precision = f"%.{precision}f"
+         else:
+             self.precision = "%d"
+         self.name = name
+@@ -70,7 +70,7 @@ class Counter(object):
+         if self.name is None:
+             self._print_name = ""
+         else:
+-            self._print_name = "%s: " % self.name
++            self._print_name = f"{self.name}: "
+ 
+         self.start_time = time.time()
+         self.curr_iter = 0
+@@ -83,10 +83,8 @@ class Counter(object):
+ 
+         self.end_time = time.time()
+ 
+-        out = "%d iter | %s sec" % (
+-            self.curr_iter,
+-            self.precision % (self.end_time - self.start_time),
+-        )
++        out = (f"{self.curr_iter} iter | "
++               f"{self.precision % (self.end_time - self.start_time)} sec")
+ 
+-        self.stream.write("\r%s%s" % (self._print_name, out))
++        self.stream.write(f"\r{self._print_name}{out}")
+         self.stream.flush()
+diff --git a/mlxtend/utils/testing.py b/mlxtend/utils/testing.py
+index 367191eb..1c6d1034 100644
+--- a/mlxtend/utils/testing.py
++++ b/mlxtend/utils/testing.py
+@@ -28,8 +28,8 @@ def assert_raises(exception_type, message, func, *args, **kwargs):
+         error_message = str(e)
+         if message and message not in error_message:
+             raise AssertionError(
+-                "Error message differs from the expected"
+-                " string: %r. Got error message: %r" % (message, error_message)
++                f"Error message differs from the expected"
++                f" string: {message!r}. Got error message: {error_message!r}"
+             )
+     else:
+-        raise AssertionError("%s not raised." % exception_type.__name__)
++        raise AssertionError(f"{exception_type.__name__} not raised.")
