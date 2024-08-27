@@ -1,0 +1,787 @@
+diff --git a/mlxtend/_base/_classifier.py b/mlxtend/_base/_classifier.py
+index d51b9fee..45ec5983 100644
+--- a/mlxtend/_base/_classifier.py
++++ b/mlxtend/_base/_classifier.py
+@@ -17,17 +17,17 @@ class _Classifier(object):
+ 
+     def _check_target_array(self, y, allowed=None):
+         if not isinstance(y[0], (int, np.integer)):
+-            raise AttributeError("y must be an integer array.\nFound %s" % y.dtype)
++            raise AttributeError(f"y must be an integer array.\nFound {y.dtype}")
+         found_labels = np.unique(y)
+         if (found_labels < 0).any():
+             raise AttributeError(
+-                "y array must not contain negative labels." "\nFound %s" % found_labels
++                f"y array must not contain negative labels.\nFound {found_labels}"
+             )
+         if allowed is not None:
+             found_labels = tuple(found_labels)
+             if found_labels not in allowed:
+                 raise AttributeError(
+-                    "Labels not in %s.\nFound %s" % (allowed, found_labels)
++                    f"Labels not in {allowed}.\nFound {found_labels}"
+                 )
+ 
+     def score(self, X, y):
+diff --git a/mlxtend/classifier/perceptron.py b/mlxtend/classifier/perceptron.py
+index 30fb4b5b..ce48bb1f 100644
+--- a/mlxtend/classifier/perceptron.py
++++ b/mlxtend/classifier/perceptron.py
+@@ -85,7 +85,7 @@ class Perceptron(_BaseModel, _IterativeModel, _Classifier):
+                 update = self.eta * (y_data[idx] - self._to_classlabels(X[idx]))
+                 self.w_ += (update * X[idx]).reshape(self.w_.shape)
+                 self.b_ += update
+-                errors += int(update != 0.0)
++                errors += np.sum(update != 0.0)
+ 
+             if self.print_progress:
+                 self._print_progress(iteration=i + 1, n_iter=self.epochs, cost=errors)
+diff --git a/mlxtend/classifier/stacking_cv_classification.py b/mlxtend/classifier/stacking_cv_classification.py
+index 5bff6907..96c38a64 100644
+--- a/mlxtend/classifier/stacking_cv_classification.py
++++ b/mlxtend/classifier/stacking_cv_classification.py
+@@ -245,9 +245,9 @@ class StackingCVClassifier(
+         # X, y = check_X_y(X, y, accept_sparse=['csc', 'csr'], dtype=None)
+ 
+         if sample_weight is None:
+-            fit_params = None
++            params = None
+         else:
+-            fit_params = dict(sample_weight=sample_weight)
++            params = dict(sample_weight=sample_weight)
+ 
+         meta_features = None
+ 
+@@ -273,7 +273,7 @@ class StackingCVClassifier(
+                 groups=groups,
+                 cv=final_cv,
+                 n_jobs=self.n_jobs,
+-                fit_params=fit_params,
++                params=params,
+                 verbose=self.verbose,
+                 pre_dispatch=self.pre_dispatch,
+                 method="predict_proba" if self.use_probas else "predict",
+diff --git a/mlxtend/evaluate/accuracy.py b/mlxtend/evaluate/accuracy.py
+index fc80fcfe..edf5d392 100644
+--- a/mlxtend/evaluate/accuracy.py
++++ b/mlxtend/evaluate/accuracy.py
+@@ -93,6 +93,5 @@ def accuracy_score(
+ 
+     else:
+         raise ValueError(
+-            '`method` must be "standard", "average",'
+-            ' "balanced", or "binary". Got "%s".' % method
++            f'`method` must be "standard", "average", "balanced", or "binary". Got "{method}".'
+         )
+diff --git a/mlxtend/evaluate/bias_variance_decomp.py b/mlxtend/evaluate/bias_variance_decomp.py
+index 7bca4b69..195446f9 100644
+--- a/mlxtend/evaluate/bias_variance_decomp.py
++++ b/mlxtend/evaluate/bias_variance_decomp.py
+@@ -25,7 +25,7 @@ def bias_variance_decomp(
+     loss="0-1_loss",
+     num_rounds=200,
+     random_seed=None,
+-    **fit_params
++    **params
+ ):
+     """
+     estimator : object
+@@ -61,7 +61,7 @@ def bias_variance_decomp(
+         Random seed for the bootstrap sampling used for the
+         bias-variance decomposition.
+ 
+-    fit_params : additional parameters
++    params : additional parameters
+         Additional parameters to be passed to the .fit() function of the
+         estimator when it is fit to the bootstrap samples.
+ 
+@@ -124,10 +124,10 @@ def bias_variance_decomp(
+                         ]
+                     )
+ 
+-            estimator.fit(X_boot, y_boot, **fit_params)
++            estimator.fit(X_boot, y_boot, **params)
+             pred = estimator.predict(X_test).reshape(1, -1)
+         else:
+-            pred = estimator.fit(X_boot, y_boot, **fit_params).predict(X_test)
++            pred = estimator.fit(X_boot, y_boot, **params).predict(X_test)
+         all_pred[i] = pred
+ 
+     if loss == "0-1_loss":
+diff --git a/mlxtend/evaluate/bootstrap_outofbag.py b/mlxtend/evaluate/bootstrap_outofbag.py
+index d66096a9..34b44b5b 100644
+--- a/mlxtend/evaluate/bootstrap_outofbag.py
++++ b/mlxtend/evaluate/bootstrap_outofbag.py
+@@ -45,7 +45,7 @@ class BootstrapOutOfBag(object):
+             raise ValueError("Number of splits must be greater than 1.")
+         self.n_splits = n_splits
+ 
+-    def split(self, X, y=None, groups=None):
++    def split(self, X, y=None, groups=None): # pylint: disable=W0613
+         """
+ 
+         y : array-like or None (default: None)
+@@ -67,7 +67,7 @@ class BootstrapOutOfBag(object):
+             test_idx = np.array(list(set_idx - set(train_idx)))
+             yield train_idx, test_idx
+ 
+-    def get_n_splits(self, X=None, y=None, groups=None):
++    def get_n_splits(self, X=None, y=None, groups=None): # pylint: disable=W0613
+         """Returns the number of splitting iterations in the cross-validator
+ 
+         Parameters
+diff --git a/mlxtend/evaluate/bootstrap_point632.py b/mlxtend/evaluate/bootstrap_point632.py
+index 315e58c3..31d6e3c8 100644
+--- a/mlxtend/evaluate/bootstrap_point632.py
++++ b/mlxtend/evaluate/bootstrap_point632.py
+@@ -53,7 +53,7 @@ def bootstrap_point632_score(
+     predict_proba=False,
+     random_seed=None,
+     clone_estimator=True,
+-    **fit_params,
++    **params,
+ ):
+     """
+     Implementation of the .632 [1] and .632+ [2] bootstrap
+@@ -121,7 +121,7 @@ def bootstrap_point632_score(
+         Clones the estimator if true, otherwise fits
+         the original.
+ 
+-    fit_params : additional parameters
++    params : additional parameters
+         Additional parameters to be passed to the .fit() function of the
+         estimator when it is fit to the bootstrap samples.
+ 
+@@ -155,13 +155,13 @@ def bootstrap_point632_score(
+     """
+     if not isinstance(n_splits, int) or n_splits < 1:
+         raise ValueError(
+-            "Number of splits must be" " greater than 1. Got %s." % n_splits
++            f"Number of splits must be greater than 1. Got {n_splits}.
+         )
+ 
+     allowed_methods = (".632", ".632+", "oob")
+     if not isinstance(method, str) or method not in allowed_methods:
+         raise ValueError(
+-            "The `method` must " "be in %s. Got %s." % (allowed_methods, method)
++            f"The `method` must be in {allowed_methods}. Got {method}."
+         )
+ 
+     # Pandas compatibility
+@@ -205,7 +205,7 @@ def bootstrap_point632_score(
+     cnt = 0
+ 
+     for train, test in oob.split(X):
+-        cloned_est.fit(X[train], y[train], **fit_params)
++        cloned_est.fit(X[train], y[train], **params)
+ 
+         # get the prediction probability
+         # for binary class uses the last column
+diff --git a/mlxtend/evaluate/confusion_matrix.py b/mlxtend/evaluate/confusion_matrix.py
+index f91b9754..5b6c190a 100644
+--- a/mlxtend/evaluate/confusion_matrix.py
++++ b/mlxtend/evaluate/confusion_matrix.py
+@@ -49,7 +49,7 @@ def confusion_matrix(y_target, y_predicted, binary=False, positive_label=1):
+ 
+     if len(y_target) != len(y_predicted):
+         raise AttributeError(
+-            "`y_target` and `y_predicted`" " don't have the same number of elements."
++            "y_target and y_predicted don't have the same number of elements."
+         )
+ 
+     if binary:
+diff --git a/mlxtend/evaluate/holdout.py b/mlxtend/evaluate/holdout.py
+index b960c738..7c903cef 100644
+--- a/mlxtend/evaluate/holdout.py
++++ b/mlxtend/evaluate/holdout.py
+@@ -42,7 +42,7 @@ class RandomHoldoutSplit(object):
+         self.random_seed = random_seed
+         self.stratify = stratify
+ 
+-    def split(self, X, y, groups=None):
++    def split(self, X, y, groups=None): # pylint: disable=W0613
+         """Generate indices to split data into training and test set.
+ 
+         Parameters
+@@ -90,7 +90,7 @@ class RandomHoldoutSplit(object):
+         for i in range(1):
+             yield train_index, valid_index
+ 
+-    def get_n_splits(self, X=None, y=None, groups=None):
++    def get_n_splits(self, X=None, y=None, groups=None): # pylint: disable=W0613
+         """Returns the number of splitting iterations in the cross-validator
+ 
+         Parameters
+@@ -171,7 +171,7 @@ class PredefinedHoldoutSplit(object):
+         for i in range(1):
+             yield ind[train_mask], ind[valid_mask]
+ 
+-    def get_n_splits(self, X=None, y=None, groups=None):
++    def get_n_splits(self, X=None, y=None, groups=None): # pylint: disable=W0613
+         """Returns the number of splitting iterations in the cross-validator
+ 
+         Parameters
+diff --git a/mlxtend/evaluate/mcnemar.py b/mlxtend/evaluate/mcnemar.py
+index aca09d6e..1266adcf 100644
+--- a/mlxtend/evaluate/mcnemar.py
++++ b/mlxtend/evaluate/mcnemar.py
+@@ -155,7 +155,7 @@ def mcnemar_tables(y_target, *y_model_predictions):
+         tb[1, 0] = np.sum(minus_true == -1)
+         tb[1, 1] = np.sum(plus_true == 0)
+ 
+-        name_str = "model_%s vs model_%s" % (comb[0], comb[1])
++        name_str = f"model_{comb[0]} vs model_{comb[1]}"
+         tables[name_str] = tb
+ 
+     return tables
+diff --git a/mlxtend/evaluate/permutation.py b/mlxtend/evaluate/permutation.py
+index f1a0d52b..00a10f4e 100644
+--- a/mlxtend/evaluate/permutation.py
++++ b/mlxtend/evaluate/permutation.py
+@@ -87,7 +87,7 @@ def permutation_test(
+ 
+     if method not in ("approximate", "exact"):
+         raise AttributeError(
+-            'method must be "approximate"' ' or "exact", got %s' % method
++            f'method must be "approximate" or "exact", got {method}'
+         )
+ 
+     if isinstance(func, str):
+diff --git a/mlxtend/evaluate/scoring.py b/mlxtend/evaluate/scoring.py
+index 38c9fe96..f88cc66e 100644
+--- a/mlxtend/evaluate/scoring.py
++++ b/mlxtend/evaluate/scoring.py
+@@ -90,11 +90,11 @@ def scoring(
+     }
+ 
+     if metric not in implemented:
+-        raise AttributeError("`metric` not in %s" % implemented)
++        raise AttributeError(f"`metric` not in {implemented}")
+ 
+     if len(y_target) != len(y_predicted):
+         raise AttributeError(
+-            "`y_target` and `y_predicted`" " don't have the same number of elements."
++            "`y_target` and `y_predicted` don't have the same number of elements."
+         )
+ 
+     if unique_labels == "auto":
+diff --git a/mlxtend/evaluate/time_series.py b/mlxtend/evaluate/time_series.py
+index fb2d9716..a159328a 100644
+--- a/mlxtend/evaluate/time_series.py
++++ b/mlxtend/evaluate/time_series.py
+@@ -146,7 +146,7 @@ class GroupTimeSeriesSplit:
+             test_start_idx = test_start_idx + shift_size
+             test_end_idx = test_end_idx + shift_size
+ 
+-    def get_n_splits(self, X=None, y=None, groups=None):
++    def get_n_splits(self, X=None, y=None, groups=None): # pylint: disable=W0613
+         """Returns the number of splitting iterations in the cross-validator.
+ 
+         Parameters
+@@ -306,7 +306,7 @@ def plot_split_indices(cv, cv_args, X, y, groups, n_splits, image_file_path=None
+         fontsize=13,
+     )
+ 
+-    ax.set_title("{}\n{}".format(type(cv).__name__, cv_args), fontsize=15)
++    ax.set_title(f"{type(cv).__name__}\n{cv_args}", fontsize=15)
+     ax.xaxis.set_major_locator(MaxNLocator(min_n_ticks=len(X), integer=True))
+     ax.set_xlabel(xlabel="Sample index", fontsize=13)
+     ax.set_ylabel(ylabel="CV iteration", fontsize=13)
+diff --git a/mlxtend/evaluate/ttest.py b/mlxtend/evaluate/ttest.py
+index 677de7ed..e60076cc 100644
+--- a/mlxtend/evaluate/ttest.py
++++ b/mlxtend/evaluate/ttest.py
+@@ -84,7 +84,7 @@ def paired_ttest_resampled(
+     """
+     if not isinstance(test_size, int) and not isinstance(test_size, float):
+         raise ValueError(
+-            "train_size must be of " "type int or float. Got %s." % type(test_size)
++            f"train_size must be of type int or float. Got {type(test_size)}."
+         )
+ 
+     rng = np.random.RandomState(random_seed)
+diff --git a/mlxtend/feature_selection/exhaustive_feature_selector.py b/mlxtend/feature_selection/exhaustive_feature_selector.py
+index bbbd1f84..113ef6f2 100644
+--- a/mlxtend/feature_selection/exhaustive_feature_selector.py
++++ b/mlxtend/feature_selection/exhaustive_feature_selector.py
+@@ -237,7 +237,7 @@ class ExhaustiveFeatureSelector(BaseEstimator, MetaEstimatorMixin):
+         # don't mess with this unless testing
+         self._TESTING_INTERRUPT_MODE = False
+ 
+-    def fit(self, X, y, groups=None, **fit_params):
++    def fit(self, X, y, groups=None, **params):
+         """Perform feature selection and learn model from training data.
+ 
+         Parameters
+@@ -255,7 +255,7 @@ class ExhaustiveFeatureSelector(BaseEstimator, MetaEstimatorMixin):
+             Group labels for the samples used while splitting the dataset into
+             train/test set. Passed to the fit method of the cross-validator.
+ 
+-        fit_params : dict of string -> object, optional
++        params : dict of string -> object, optional
+             Parameters to pass to to the fit method of classifier.
+ 
+         Returns
+@@ -448,7 +448,7 @@ class ExhaustiveFeatureSelector(BaseEstimator, MetaEstimatorMixin):
+                     list(set(c).union(self.fixed_features_group_set)),
+                     groups=groups,
+                     feature_groups=self.feature_groups,
+-                    **fit_params,
++                    **params,
+                 )
+                 for c in candidates
+             )
+@@ -483,7 +483,7 @@ class ExhaustiveFeatureSelector(BaseEstimator, MetaEstimatorMixin):
+         return self
+ 
+     def finalize_fit(self):
+-        max_score = np.NINF
++        max_score = -np.inf
+         for c in self.subsets_:
+             if self.subsets_[c]["avg_score"] > max_score:
+                 best_subset = c
+@@ -517,7 +517,7 @@ class ExhaustiveFeatureSelector(BaseEstimator, MetaEstimatorMixin):
+         X_, _ = _preprocess(X)
+         return X_[:, self.best_idx_]
+ 
+-    def fit_transform(self, X, y, groups=None, **fit_params):
++    def fit_transform(self, X, y, groups=None, **params):
+         """Fit to training data and return the best selected features from X.
+ 
+         Parameters
+@@ -532,7 +532,7 @@ class ExhaustiveFeatureSelector(BaseEstimator, MetaEstimatorMixin):
+         groups : array-like, with shape (n_samples,), optional
+             Group labels for the samples used while splitting the dataset into
+             train/test set. Passed to the fit method of the cross-validator.
+-        fit_params : dict of string -> object, optional
++        params : dict of string -> object, optional
+             Parameters to pass to to the fit method of classifier.
+ 
+         Returns
+@@ -540,7 +540,7 @@ class ExhaustiveFeatureSelector(BaseEstimator, MetaEstimatorMixin):
+         Feature subset of X, shape={n_samples, k_features}
+ 
+         """
+-        self.fit(X, y, groups=groups, **fit_params)
++        self.fit(X, y, groups=groups, **params)
+         return self.transform(X)
+ 
+     def get_metric_dict(self, confidence_interval=0.95):
+diff --git a/mlxtend/feature_selection/sequential_feature_selector.py b/mlxtend/feature_selection/sequential_feature_selector.py
+index 0a766ed1..3e4105ba 100644
+--- a/mlxtend/feature_selection/sequential_feature_selector.py
++++ b/mlxtend/feature_selection/sequential_feature_selector.py
+@@ -301,7 +301,7 @@ class SequentialFeatureSelector(_BaseXComposition, MetaEstimatorMixin):
+ 
+         return err_msg
+ 
+-    def fit(self, X, y, groups=None, **fit_params):
++    def fit(self, X, y, groups=None, **params):
+         """Perform feature selection and learn model from training data.
+ 
+         Parameters
+@@ -318,7 +318,7 @@ class SequentialFeatureSelector(_BaseXComposition, MetaEstimatorMixin):
+         groups : array-like, with shape (n_samples,), optional
+             Group labels for the samples used while splitting the dataset into
+             train/test set. Passed to the fit method of the cross-validator.
+-        fit_params : various, optional
++        params : various, optional
+             Additional parameters that are being passed to the estimator.
+             For example, `sample_weights=weights`.
+ 
+@@ -521,7 +521,7 @@ class SequentialFeatureSelector(_BaseXComposition, MetaEstimatorMixin):
+                 k_idx,
+                 groups=groups,
+                 feature_groups=self.feature_groups_,
+-                **fit_params,
++                **params,
+             )
+             self.subsets_[k] = {
+                 "feature_idx": k_idx,
+@@ -548,7 +548,7 @@ class SequentialFeatureSelector(_BaseXComposition, MetaEstimatorMixin):
+                     is_forward=self.forward,
+                     groups=groups,
+                     feature_groups=self.feature_groups_,
+-                    **fit_params,
++                    **params,
+                 )
+ 
+                 k = len(k_idx)
+@@ -599,7 +599,7 @@ class SequentialFeatureSelector(_BaseXComposition, MetaEstimatorMixin):
+                             is_forward=is_float_forward,
+                             groups=groups,
+                             feature_groups=self.feature_groups_,
+-                            **fit_params,
++                            **params,
+                         )
+ 
+                         if k_score_c <= k_score:
+@@ -651,7 +651,7 @@ class SequentialFeatureSelector(_BaseXComposition, MetaEstimatorMixin):
+         return self
+ 
+     def finalize_fit(self):
+-        max_score = np.NINF
++        max_score = -np.inf
+         for k in self.subsets_:
+             if (
+                 k >= self.min_k
+@@ -662,7 +662,7 @@ class SequentialFeatureSelector(_BaseXComposition, MetaEstimatorMixin):
+                 best_subset = k
+ 
+         k_score = max_score
+-        if k_score == np.NINF:
++        if k_score == -np.inf:
+             # i.e. all keys of self.subsets_ are not in interval `[self.min_k, self.max_k]`
+             # this happens if KeyboardInterrupt happens
+             keys = list(self.subsets_.keys())
+@@ -710,7 +710,7 @@ class SequentialFeatureSelector(_BaseXComposition, MetaEstimatorMixin):
+         is_forward,
+         groups=None,
+         feature_groups=None,
+-        **fit_params,
++        **params,
+     ):
+         """Perform one round of feature selection. When `is_forward=True`, it is
+         a forward selection that searches the `search_set` to find one feature that
+@@ -748,7 +748,7 @@ class SequentialFeatureSelector(_BaseXComposition, MetaEstimatorMixin):
+         feature_groups : list or None (default: None)
+             Optional argument for treating certain features as a group.
+ 
+-        fit_params : various, optional
++        params : various, optional
+             Additional parameters that are being passed to the estimator.
+             For example, `sample_weights=weights`.
+ 
+@@ -784,7 +784,7 @@ class SequentialFeatureSelector(_BaseXComposition, MetaEstimatorMixin):
+                     tuple(set(p) | must_include_set),
+                     groups=groups,
+                     feature_groups=feature_groups,
+-                    **fit_params,
++                    **params,
+                 )
+                 for p in feature_explorer
+             )
+@@ -823,7 +823,7 @@ class SequentialFeatureSelector(_BaseXComposition, MetaEstimatorMixin):
+         X_, _ = _preprocess(X)
+         return X_[:, self.k_feature_idx_]
+ 
+-    def fit_transform(self, X, y, groups=None, **fit_params):
++    def fit_transform(self, X, y, groups=None, **params):
+         """Fit to training data then reduce X to its most important features.
+ 
+         Parameters
+@@ -840,7 +840,7 @@ class SequentialFeatureSelector(_BaseXComposition, MetaEstimatorMixin):
+         groups : array-like, with shape (n_samples,), optional
+             Group labels for the samples used while splitting the dataset into
+             train/test set. Passed to the fit method of the cross-validator.
+-        fit_params : various, optional
++        params : various, optional
+             Additional parameters that are being passed to the estimator.
+             For example, `sample_weights=weights`.
+ 
+@@ -849,7 +849,7 @@ class SequentialFeatureSelector(_BaseXComposition, MetaEstimatorMixin):
+         Reduced feature subset of X, shape={n_samples, k_features}
+ 
+         """
+-        self.fit(X, y, groups=groups, **fit_params)
++        self.fit(X, y, groups=groups, **params)
+         return self.transform(X)
+ 
+     def get_metric_dict(self, confidence_interval=0.95):
+diff --git a/mlxtend/feature_selection/tests/test_exhaustive_feature_selector.py b/mlxtend/feature_selection/tests/test_exhaustive_feature_selector.py
+index 012413e2..ebade55d 100644
+--- a/mlxtend/feature_selection/tests/test_exhaustive_feature_selector.py
++++ b/mlxtend/feature_selection/tests/test_exhaustive_feature_selector.py
+@@ -269,7 +269,7 @@ def test_knn_cv3_groups():
+     dict_compare_utility(d1=expect, d2=efs1.subsets_)
+ 
+ 
+-def test_fit_params():
++def test_params():
+     iris = load_iris()
+     X = iris.data
+     y = iris.target
+diff --git a/mlxtend/feature_selection/tests/test_sequential_feature_selector.py b/mlxtend/feature_selection/tests/test_sequential_feature_selector.py
+index bd14c83f..337fc8f8 100644
+--- a/mlxtend/feature_selection/tests/test_sequential_feature_selector.py
++++ b/mlxtend/feature_selection/tests/test_sequential_feature_selector.py
+@@ -69,7 +69,7 @@ def test_run_default():
+     assert sfs.k_feature_idx_ == (3,)
+ 
+ 
+-def test_fit_params():
++def test_params():
+     iris = load_iris()
+     X = iris.data
+     y = iris.target
+diff --git a/mlxtend/feature_selection/tests/test_sequential_feature_selector_feature_groups.py b/mlxtend/feature_selection/tests/test_sequential_feature_selector_feature_groups.py
+index 83d36d02..136bd789 100644
+--- a/mlxtend/feature_selection/tests/test_sequential_feature_selector_feature_groups.py
++++ b/mlxtend/feature_selection/tests/test_sequential_feature_selector_feature_groups.py
+@@ -52,7 +52,7 @@ def test_run_default():
+     assert sfs.k_feature_idx_ == (3,)
+ 
+ 
+-def test_fit_params():
++def test_params():
+     iris = load_iris()
+     X = iris.data
+     y = iris.target
+diff --git a/mlxtend/feature_selection/utilities.py b/mlxtend/feature_selection/utilities.py
+index 4290401e..43c26fab 100644
+--- a/mlxtend/feature_selection/utilities.py
++++ b/mlxtend/feature_selection/utilities.py
+@@ -42,7 +42,7 @@ def _merge_lists(nested_list, high_level_indices=None):
+ 
+ 
+ def _calc_score(
+-    selector, X, y, indices, groups=None, feature_groups=None, **fit_params
++    selector, X, y, indices, groups=None, feature_groups=None, **params
+ ):
+     """
+     calculate the cross-validation score for feature data `X` and target variable
+@@ -79,7 +79,7 @@ def _calc_score(
+         For example, `feature_groups=[[1], [2], [3, 4, 5]]`
+         specifies 3 feature groups.e
+ 
+-    fit_params : dict of string -> object, optional
++    params : dict of string -> object, optional
+         Parameters to pass to to the fit method of classifier.
+ 
+     Returns
+@@ -104,10 +104,10 @@ def _calc_score(
+             scoring=selector.scorer,
+             n_jobs=1,
+             pre_dispatch=selector.pre_dispatch,
+-            fit_params=fit_params,
++            params=params,
+         )
+     else:
+-        selector.est_.fit(X[:, IDX], y, **fit_params)
++        selector.est_.fit(X[:, IDX], y, **params)
+         scores = np.array([selector.scorer(selector.est_, X[:, IDX], y)])
+     return indices, scores
+ 
+diff --git a/mlxtend/file_io/find_filegroups.py b/mlxtend/file_io/find_filegroups.py
+index 7d5ea6d1..bd8c5977 100644
+--- a/mlxtend/file_io/find_filegroups.py
++++ b/mlxtend/file_io/find_filegroups.py
+@@ -92,7 +92,7 @@ def find_filegroups(
+     groups = {}
+     for f in base:
+         basename = os.path.splitext(os.path.basename(f))[0]
+-        basename = re.sub(r"\%s$" % rstrip, "", basename)
++        basename = re.sub(rf"\{rstrip}$", "", basename)
+         groups[basename] = [f]
+ 
+     # groups = {os.path.splitext(os.path.basename(f))[0].rstrip(rstrip):[f]
+@@ -101,7 +101,7 @@ def find_filegroups(
+     for idx, r in enumerate(rest):
+         for f in r:
+             basename, ext = os.path.splitext(os.path.basename(f))
+-            basename = re.sub(r"\%s$" % rstrip, "", basename)
++            basename = re.sub(rf"\{rstrip}$", "", basename)
+             try:
+                 if extensions[idx + 1] == "" or ext == extensions[idx + 1]:
+                     groups[basename].append(f)
+diff --git a/mlxtend/preprocessing/copy_transformer.py b/mlxtend/preprocessing/copy_transformer.py
+index 978250e0..0eb06f6c 100644
+--- a/mlxtend/preprocessing/copy_transformer.py
++++ b/mlxtend/preprocessing/copy_transformer.py
+@@ -64,7 +64,7 @@ class CopyTransformer(BaseEstimator):
+         """
+         return self.transform(X)
+ 
+-    def fit(self, X, y=None):
++    def fit(self, X, y=None): # pylint: disable=W0613
+         """Mock method. Does nothing.
+ 
+         Parameters
+diff --git a/mlxtend/preprocessing/dense_transformer.py b/mlxtend/preprocessing/dense_transformer.py
+index 9b0137f8..b432504e 100644
+--- a/mlxtend/preprocessing/dense_transformer.py
++++ b/mlxtend/preprocessing/dense_transformer.py
+@@ -46,7 +46,7 @@ class DenseTransformer(BaseEstimator):
+         else:
+             return X
+ 
+-    def fit(self, X, y=None):
++    def fit(self, X, y=None): # pylint: disable=W0613
+         """Mock method. Does nothing.
+ 
+         Parameters
+diff --git a/mlxtend/preprocessing/scaling.py b/mlxtend/preprocessing/scaling.py
+index f53a1e8b..8f7cb81a 100644
+--- a/mlxtend/preprocessing/scaling.py
++++ b/mlxtend/preprocessing/scaling.py
+@@ -11,30 +11,30 @@ import pandas as pd
+ 
+ 
+ def minmax_scaling(array, columns, min_val=0, max_val=1):
+-    """Min max scaling of pandas' DataFrames.
+-
+-    Parameters
+-    ----------
+-    array : pandas DataFrame or NumPy ndarray, shape = [n_rows, n_columns].
+-    columns : array-like, shape = [n_columns]
+-        Array-like with column names, e.g., ['col1', 'col2', ...]
+-        or column indices [0, 2, 4, ...]
+-    min_val : `int` or `float`, optional (default=`0`)
+-        minimum value after rescaling.
+-    max_val : `int` or `float`, optional (default=`1`)
+-        maximum value after rescaling.
+-
+-    Returns
+-    ----------
+-    df_new : pandas DataFrame object.
+-        Copy of the array or DataFrame with rescaled columns.
+-
+-    Examples
+-    ----------
+-    For usage examples, please see
+-    https://rasbt.github.io/mlxtend/user_guide/preprocessing/minmax_scaling/
+-
+-    """
++#     """Min max scaling of pandas' DataFrames.
++
++#     Parameters
++#     ----------
++#     array : pandas DataFrame or NumPy ndarray, shape = [n_rows, n_columns].
++#     columns : array-like, shape = [n_columns]
++#         Array-like with column names, e.g., ['col1', 'col2', ...]
++#         or column indices [0, 2, 4, ...]
++#     min_val : `int` or `float`, optional (default=`0`)
++#         minimum value after rescaling.
++#     max_val : `int` or `float`, optional (default=`1`)
++#         maximum value after rescaling.
++
++#     Returns
++#     ----------
++#     df_new : pandas DataFrame object.
++#         Copy of the array or DataFrame with rescaled columns.
++
++#     Examples
++#     ----------
++#     For usage examples, please see
++#     https://rasbt.github.io/mlxtend/user_guide/preprocessing/minmax_scaling/
++
++#     """
+     ary_new = array.astype(float)
+     if len(ary_new.shape) == 1:
+         ary_new = ary_new[:, np.newaxis]
+@@ -46,12 +46,21 @@ def minmax_scaling(array, columns, min_val=0, max_val=1):
+     else:
+         raise AttributeError("Input array must be a pandas" "DataFrame or NumPy array")
+ 
+-    numerator = ary_newt[:, columns] - ary_newt[:, columns].min(axis=0)
+-    denominator = ary_newt[:, columns].max(axis=0) - ary_newt[:, columns].min(axis=0)
+-    ary_newt[:, columns] = numerator / denominator
++    for col in columns:
++        col_data = ary_newt[:, col]
+ 
+-    if not min_val == 0 and not max_val == 1:
+-        ary_newt[:, columns] = ary_newt[:, columns] * (max_val - min_val) + min_val
++        # ignore nan values to scale non-nan values appropriately (like in sklearn)
++        col_min = np.nanmin(col_data)
++        col_max = np.nanmax(col_data)
++
++        # avoid div by zero (when min == max)
++        if col_max == col_min:
++            ary_newt[:, col] = min_val
++        else:
++            scaled_data = (col_data - col_min) / (col_max - col_min)
++            scaled_data = scaled_data * (max_val - min_val) + min_val
++
++            ary_newt[:, col] = np.where(np.isnan(col_data), np.nan, scaled_data)
+ 
+     return ary_newt[:, columns]
+ 
+@@ -92,12 +101,20 @@ def standardize(array, columns=None, ddof=0, return_params=False, params=None):
+     df_new : pandas DataFrame object.
+         Copy of the array or DataFrame with standardized columns.
+ 
++    Raises
++    ------
++    ValueError
++        If the input array is empty.
++
+     Examples
+     ----------
+     For usage examples, please see
+     https://rasbt.github.io/mlxtend/user_guide/preprocessing/standardize/
+ 
+     """
++    if array.size == 0:
++        raise ValueError("Input array is empty. You cannot standardize an empty array.")
++
+     ary_new = array.astype(float)
+     dim = ary_new.shape
+     if len(dim) == 1:
+@@ -119,8 +136,8 @@ def standardize(array, columns=None, ddof=0, return_params=False, params=None):
+         parameters = params
+     else:
+         parameters = {
+-            "avgs": ary_newt[:, columns].mean(axis=0),
+-            "stds": ary_newt[:, columns].std(axis=0, ddof=ddof),
++            "avgs": np.nanmean(ary_newt[:, columns], axis=0),
++            "stds": np.nanstd(ary_newt[:, columns], axis=0, ddof=ddof),
+         }
+     are_constant = np.all(ary_newt[:, columns] == ary_newt[0, columns], axis=0)
+ 
+@@ -128,10 +145,9 @@ def standardize(array, columns=None, ddof=0, return_params=False, params=None):
+         if b:
+             ary_newt[:, c] = np.zeros(dim[0])
+             parameters["stds"][c] = 1.0
+-
+-    ary_newt[:, columns] = (ary_newt[:, columns] - parameters["avgs"]) / parameters[
+-        "stds"
+-    ]
++        else:
++            non_nan_mask = ~np.isnan(ary_newt[:, c])
++            ary_newt[non_nan_mask, c] = (ary_newt[non_nan_mask, c] - parameters["avgs"][c]) / parameters["stds"][c]
+ 
+     if return_params:
+         return ary_newt[:, columns], parameters
+diff --git a/mlxtend/regressor/stacking_cv_regression.py b/mlxtend/regressor/stacking_cv_regression.py
+index a1faf2ff..30e5fa4c 100644
+--- a/mlxtend/regressor/stacking_cv_regression.py
++++ b/mlxtend/regressor/stacking_cv_regression.py
+@@ -208,9 +208,9 @@ class StackingCVRegressor(_BaseXComposition, RegressorMixin, TransformerMixin):
+         # predicting have not been trained on by the algorithm, so it's
+         # less susceptible to overfitting.
+         if sample_weight is None:
+-            fit_params = None
++            params = None
+         else:
+-            fit_params = dict(sample_weight=sample_weight)
++            params = dict(sample_weight=sample_weight)
+         meta_features = np.column_stack(
+             [
+                 cross_val_predict(
+@@ -221,7 +221,7 @@ class StackingCVRegressor(_BaseXComposition, RegressorMixin, TransformerMixin):
+                     cv=kfold,
+                     verbose=self.verbose,
+                     n_jobs=self.n_jobs,
+-                    fit_params=fit_params,
++                    params=params,
+                     pre_dispatch=self.pre_dispatch,
+                 )
+                 for regr in self.regr_
+diff --git a/mlxtend/text/tokenizer.py b/mlxtend/text/tokenizer.py
+index 685428f0..696da17c 100644
+--- a/mlxtend/text/tokenizer.py
++++ b/mlxtend/text/tokenizer.py
+@@ -23,8 +23,11 @@ def tokenizer_words_and_emoticons(text):
+     """
+     text = re.sub(r"<[^>]*>", "", text)
+     emoticons = re.findall(r"(?::|;|=)(?:-)?(?:\)|\(|D|P)", text)
+-    text = re.sub(r"[\W]+", " ", text.lower()) + " ".join(emoticons)
+-    return text.split()
++    for emoticon in emoticons:
++        text = text.replace(emoticon, "")
++    text = re.sub(r"[\W]+", " ", text.lower())
++    result = text.split() + emoticons
++    return result
+ 
+ 
+ def tokenizer_emoticons(text):
