@@ -1,0 +1,947 @@
+================================================================================= test session starts =================================================================================
+platform linux -- Python 3.11.7, pytest-8.3.2, pluggy-1.5.0
+rootdir: /home/mithrandir/Workspace/matf/vs/2023_Analysis_mlxtend
+plugins: cov-5.0.0
+collected 39 items                                                                                                                                                                    
+
+pytest/unit_tests/tests/test_accuracy_evaluation.py ......                                                                                                                      [ 15%]
+pytest/unit_tests/tests/test_confusion_matrix.py ....                                                                                                                           [ 25%]
+pytest/unit_tests/tests/test_minmax_scaling.py .F..F.F                                                                                                                          [ 43%]
+pytest/unit_tests/tests/test_standardize_scaling.py .F..FFF                                                                                                                     [ 61%]
+pytest/unit_tests/tests/test_text_tokenizer.py F.                                                                                                                               [ 66%]
+pytest/integration_tests/tests/test_ensemble_vote_classifier.py ....                                                                                                            [ 76%]
+pytest/integration_tests/tests/test_perceptron_learning.py .                                                                                                                    [ 79%]
+pytest/integration_tests/tests/test_sfs_with_classification.py FFF.                                                                                                             [ 89%]
+pytest/integration_tests/tests/test_sfs_with_regression.py FFF.                                                                                                                 [100%]
+
+====================================================================================== FAILURES =======================================================================================
+_________________________________________________________________________ test_minmax_scaling_constant_values _________________________________________________________________________
+
+    def test_minmax_scaling_constant_values():
+        for i in range(100):
+            value = np.random.uniform(low=-1000, high=1000)
+            X = np.full((10, 3), value)
+            X_scaled_mlxtend = minmax_scaling(X, columns=[0, 1, 2])
+            scaler = MinMaxScaler()
+            X_scaled_sklearn = scaler.fit_transform(X)
+    
+            save_results_minmax(X_scaled_mlxtend, X_scaled_sklearn, "test_minmax_scaling_constant_values", i)
+    
+            assert X_scaled_mlxtend.shape == X_scaled_sklearn.shape, "Oblik (shape) povratnih vrednosti se ne podudara!"
+>           assert np.allclose(X_scaled_mlxtend, X_scaled_sklearn), "MinMax skaliranje nije ispravno za konstantne vrednosti!"
+E           AssertionError: MinMax skaliranje nije ispravno za konstantne vrednosti!
+E           assert False
+E            +  where False = <function allclose at 0x7f925f8f6170>(array([[nan, nan, nan],\n       [nan, nan, nan],\n       [nan, nan, nan],\n       [nan, nan, nan],\n       [nan, nan, nan],\n       [nan, nan, nan],\n       [nan, nan, nan],\n       [nan, nan, nan],\n       [nan, nan, nan],\n       [nan, nan, nan]]), array([[0., 0., 0.],\n       [0., 0., 0.],\n       [0., 0., 0.],\n       [0., 0., 0.],\n       [0., 0., 0.],\n       [0., 0., 0.],\n       [0., 0., 0.],\n       [0., 0., 0.],\n       [0., 0., 0.],\n       [0., 0., 0.]]))
+E            +    where <function allclose at 0x7f925f8f6170> = np.allclose
+
+pytest/unit_tests/tests/test_minmax_scaling.py:46: AssertionError
+___________________________________________________________________________ test_minmax_scaling_single_row ____________________________________________________________________________
+
+    def test_minmax_scaling_single_row():
+        for i in range(100):
+            X = np.random.uniform(low=0, high=1000, size=(1, 3))
+            X_scaled_mlxtend = minmax_scaling(X, columns=[0, 1, 2])
+            scaler = MinMaxScaler()
+            X_scaled_sklearn = scaler.fit_transform(X)
+    
+            save_results_minmax(X_scaled_mlxtend, X_scaled_sklearn, "test_minmax_scaling_single_row", i)
+    
+            assert X_scaled_mlxtend.shape == X_scaled_sklearn.shape, "Oblik (shape) povratnih vrednosti se ne podudara!"
+>           assert np.allclose(X_scaled_mlxtend, X_scaled_sklearn), "MinMax skaliranje nije ispravno kada se obrađuje samo jedan red podataka!"
+E           AssertionError: MinMax skaliranje nije ispravno kada se obrađuje samo jedan red podataka!
+E           assert False
+E            +  where False = <function allclose at 0x7f925f8f6170>(array([[nan, nan, nan]]), array([[0., 0., 0.]]))
+E            +    where <function allclose at 0x7f925f8f6170> = np.allclose
+
+pytest/unit_tests/tests/test_minmax_scaling.py:85: AssertionError
+___________________________________________________________________________ test_minmax_scaling_nan_values ____________________________________________________________________________
+
+    def test_minmax_scaling_nan_values():
+        for i in range(100):
+            X = np.random.uniform(low=0, high=1000, size=(10, 3))
+            X[0, 0] = np.nan
+    
+            # kako sklearn reaguje na NaN vrednosti
+            scaler = MinMaxScaler()
+            try:
+                X_scaled_sklearn = scaler.fit_transform(X)
+                sklearn_raises_error = False
+            except ValueError:
+                sklearn_raises_error = True
+    
+            # kako mlxtend reaguje na NaN vrednosti
+            try:
+                X_scaled_mlxtend = minmax_scaling(X, columns=[0, 1, 2])
+                mlxtend_raises_error = False
+            except ValueError:
+                mlxtend_raises_error = True
+    
+            # problem je ako sklearn javlja grešku, a mlxtend ne
+            if sklearn_raises_error:
+                assert mlxtend_raises_error, "mlxtend nije javio grešku kada je očekivano po standardu iz sklearn!"
+            else:
+                # ako sklearn ne javlja grešku, tek tada upoređujemo rezultate
+                save_results_minmax(X_scaled_mlxtend, X_scaled_sklearn, "test_minmax_scaling_nan_values", i)
+>               assert np.allclose(X_scaled_mlxtend, X_scaled_sklearn, atol=1e-5, equal_nan=True), "MinMax skaliranje nije ispravno kada se obrađuju NaN vrednosti!"
+E               AssertionError: MinMax skaliranje nije ispravno kada se obrađuju NaN vrednosti!
+E               assert False
+E                +  where False = <function allclose at 0x7f925f8f6170>(array([[       nan, 0.5853382 , 0.68128062],\n       [       nan, 0.52174088, 0.        ],\n       [       nan, 0.145167...an, 0.68896178, 0.06069742],\n       [       nan, 0.18792369, 0.52731855],\n       [       nan, 0.15063044, 0.45706492]]), array([[       nan, 0.5853382 , 0.68128062],\n       [0.94130528, 0.52174088, 0.        ],\n       [0.31944485, 0.145167...  , 0.68896178, 0.06069742],\n       [0.0031953 , 0.18792369, 0.52731855],\n       [1.        , 0.15063044, 0.45706492]]), atol=1e-05, equal_nan=True)
+E                +    where <function allclose at 0x7f925f8f6170> = np.allclose
+
+pytest/unit_tests/tests/test_minmax_scaling.py:141: AssertionError
+__________________________________________________________________________ test_standardize_constant_values ___________________________________________________________________________
+
+    def test_standardize_constant_values():
+        for i in range(100):
+            value = np.random.uniform(low=-1000, high=1000)
+            X = np.full((10, 3), value)
+            X_scaled_mlxtend = standardize(X, columns=[0, 1, 2])
+            scaler = StandardScaler()
+            X_scaled_sklearn = scaler.fit_transform(X)
+    
+            save_results_standardize(X, X_scaled_mlxtend, X_scaled_sklearn, "test_standardize_constant_values", i)
+    
+            assert X_scaled_mlxtend.shape == X_scaled_sklearn.shape, "Oblik (shape) povratnih vrednosti se ne podudara!"
+>           assert np.allclose(X_scaled_mlxtend, X_scaled_sklearn), "Standardizacija nije ispravna za konstantne vrednosti!"
+E           AssertionError: Standardizacija nije ispravna za konstantne vrednosti!
+E           assert False
+E            +  where False = <function allclose at 0x7f925f8f6170>(array([[-457.2263371, -457.2263371, -457.2263371],\n       [-457.2263371, -457.2263371, -457.2263371],\n       [-457.226..., -457.2263371],\n       [-457.2263371, -457.2263371, -457.2263371],\n       [-457.2263371, -457.2263371, -457.2263371]]), array([[1.13686838e-13, 1.13686838e-13, 1.13686838e-13],\n       [1.13686838e-13, 1.13686838e-13, 1.13686838e-13],\n    ...13],\n       [1.13686838e-13, 1.13686838e-13, 1.13686838e-13],\n       [1.13686838e-13, 1.13686838e-13, 1.13686838e-13]]))
+E            +    where <function allclose at 0x7f925f8f6170> = np.allclose
+
+pytest/unit_tests/tests/test_standardize_scaling.py:47: AssertionError
+_____________________________________________________________________________ test_standardize_single_row _____________________________________________________________________________
+
+    def test_standardize_single_row():
+        for i in range(100):
+            X = np.random.uniform(low=0, high=1000, size=(1, 3))
+            X_scaled_mlxtend = standardize(X, columns=[0, 1, 2])
+            scaler = StandardScaler()
+            X_scaled_sklearn = scaler.fit_transform(X)
+    
+            save_results_standardize(X, X_scaled_mlxtend, X_scaled_sklearn, "test_standardize_single_row", i)
+    
+            assert X_scaled_mlxtend.shape == X_scaled_sklearn.shape, "Oblik (shape) povratnih vrednosti se ne podudara!"
+>           assert np.allclose(X_scaled_mlxtend, X_scaled_sklearn), "Standardizacija nije ispravna kada se obrađuje samo jedan red podataka!"
+E           AssertionError: Standardizacija nije ispravna kada se obrađuje samo jedan red podataka!
+E           assert False
+E            +  where False = <function allclose at 0x7f925f8f6170>(array([[-645.86245023, -112.25979094, -849.27421081]]), array([[0., 0., 0.]]))
+E            +    where <function allclose at 0x7f925f8f6170> = np.allclose
+
+pytest/unit_tests/tests/test_standardize_scaling.py:86: AssertionError
+_____________________________________________________________________________ test_standardize_empty_data _____________________________________________________________________________
+
+    def test_standardize_empty_data():
+        X = np.array([])
+    
+        # kako sklearn reaguje na praznu listu
+        scaler = StandardScaler()
+        try:
+            X_scaled_sklearn = scaler.fit_transform(X)
+            sklearn_raises_error = False
+        except ValueError:
+            sklearn_raises_error = True
+    
+        # kako mlxtend reaguje na praznu listu
+        try:
+>           X_scaled_mlxtend = standardize(X)
+
+pytest/unit_tests/tests/test_standardize_scaling.py:102: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+array = array([], dtype=float64), columns = [0], ddof = 0, return_params = False, params = None
+
+    def standardize(array, columns=None, ddof=0, return_params=False, params=None):
+        """Standardize columns in pandas DataFrames.
+    
+        Parameters
+        ----------
+        array : pandas DataFrame or NumPy ndarray, shape = [n_rows, n_columns].
+        columns : array-like, shape = [n_columns] (default: None)
+            Array-like with column names, e.g., ['col1', 'col2', ...]
+            or column indices [0, 2, 4, ...]
+            If None, standardizes all columns.
+        ddof : int (default: 0)
+            Delta Degrees of Freedom. The divisor used in calculations
+            is N - ddof, where N represents the number of elements.
+        return_params : dict (default: False)
+            If set to True, a dictionary is returned in addition to the
+            standardized array. The parameter dictionary contains the
+            column means ('avgs') and standard deviations ('stds') of
+            the individual columns.
+        params : dict (default: None)
+            A dictionary with column means and standard deviations as
+            returned by the `standardize` function if `return_params`
+            was set to True. If a `params` dictionary is provided, the
+            `standardize` function will use these instead of computing
+            them from the current array.
+    
+        Notes
+        ----------
+        If all values in a given column are the same, these values are all
+        set to `0.0`. The standard deviation in the `parameters` dictionary
+        is consequently set to `1.0` to avoid dividing by zero.
+    
+        Returns
+        ----------
+        df_new : pandas DataFrame object.
+            Copy of the array or DataFrame with standardized columns.
+    
+        Examples
+        ----------
+        For usage examples, please see
+        https://rasbt.github.io/mlxtend/user_guide/preprocessing/standardize/
+    
+        """
+        ary_new = array.astype(float)
+        dim = ary_new.shape
+        if len(dim) == 1:
+            ary_new = ary_new[:, np.newaxis]
+    
+        if isinstance(ary_new, pd.DataFrame):
+            ary_newt = ary_new.loc
+            if columns is None:
+                columns = ary_new.columns
+        elif isinstance(ary_new, np.ndarray):
+            ary_newt = ary_new
+            if columns is None:
+                columns = list(range(ary_new.shape[1]))
+    
+        else:
+            raise AttributeError("Input array must be a pandas " "DataFrame or NumPy array")
+    
+        if params is not None:
+            parameters = params
+        else:
+            parameters = {
+                "avgs": ary_newt[:, columns].mean(axis=0),
+                "stds": ary_newt[:, columns].std(axis=0, ddof=ddof),
+            }
+>       are_constant = np.all(ary_newt[:, columns] == ary_newt[0, columns], axis=0)
+E       IndexError: index 0 is out of bounds for axis 0 with size 0
+
+mlxtend/mlxtend/preprocessing/scaling.py:125: IndexError
+_____________________________________________________________________________ test_standardize_nan_values _____________________________________________________________________________
+
+    def test_standardize_nan_values():
+        for i in range(100):
+            X = np.random.uniform(low=0, high=1000, size=(10, 3))
+            X[0, 0] = np.nan
+    
+            # kako sklearn reaguje na NaN vrednosti
+            scaler = StandardScaler()
+            try:
+                X_scaled_sklearn = scaler.fit_transform(X)
+                sklearn_raises_error = False
+            except ValueError:
+                sklearn_raises_error = True
+    
+            # kako mlxtend reaguje na NaN vrednosti
+            try:
+                X_scaled_mlxtend = standardize(X, columns=[0, 1, 2])
+                mlxtend_raises_error = False
+            except ValueError:
+                mlxtend_raises_error = True
+    
+            # problem je ako sklearn javlja grešku, a mlxtend ne
+            if sklearn_raises_error:
+                assert mlxtend_raises_error, "mlxtend nije javio grešku kada je očekivano po standardu iz sklearn!"
+            else:
+                # ako sklearn ne javlja grešku, tek tada upoređujemo rezultate
+                save_results_standardize(X, X_scaled_mlxtend, X_scaled_sklearn, "test_standardize_nan_values", i)
+>               assert np.allclose(X_scaled_mlxtend, X_scaled_sklearn, atol=1e-5, equal_nan=True), "Standardizacija nije ispravna kada se obrađuju NaN vrednosti!"
+E               AssertionError: Standardizacija nije ispravna kada se obrađuju NaN vrednosti!
+E               assert False
+E                +  where False = <function allclose at 0x7f925f8f6170>(array([[        nan,  1.08398907,  1.19620982],\n       [        nan, -0.9250675 , -1.6886698 ],\n       [        nan, -...234706 ,  0.19960467],\n       [        nan,  0.22906538,  1.2858325 ],\n       [        nan, -0.80422214, -0.9131179 ]]), array([[        nan,  1.08398907,  1.19620982],\n       [-0.12514632, -0.9250675 , -1.6886698 ],\n       [-0.56702286, -...234706 ,  0.19960467],\n       [-1.04582847,  0.22906538,  1.2858325 ],\n       [ 1.7345062 , -0.80422214, -0.9131179 ]]), atol=1e-05, equal_nan=True)
+E                +    where <function allclose at 0x7f925f8f6170> = np.allclose
+
+pytest/unit_tests/tests/test_standardize_scaling.py:142: AssertionError
+_________________________________________________________________________ test_tokenizer_words_and_emoticons __________________________________________________________________________
+
+    def test_tokenizer_words_and_emoticons():
+        text = 'In the land of Mordor :) where the shadows lie :-D, a ring was forged :-P <html>You cannot pass!</html>'
+        expected_result = ['in', 'the', 'land', 'of', 'mordor', 'where', 'the', 'shadows', 'lie', 'a', 'ring', 'was', 'forged', 'you', 'cannot', 'pass', ':)', ':-D', ':-P']
+    
+        result = tokenizer_words_and_emoticons(text)
+        save_results_tokenizer("test_tokenizer_words_and_emoticons", text, result, expected_result, 0)
+    
+>       assert result == expected_result, "Rezultat funkcije tokenizer_words_and_emoticons nije ispravan!"
+E       AssertionError: Rezultat funkcije tokenizer_words_and_emoticons nije ispravan!
+E       assert ['in', 'the',... 'where', ...] == ['in', 'the',... 'where', ...]
+E         
+E         At index 9 diff: 'd' != 'a'
+E         Left contains 2 more items, first extra item: ':-D'
+E         Use -v to get more diff
+
+pytest/unit_tests/tests/test_text_tokenizer.py:24: AssertionError
+____________________________________________________________________________ test_sfs_with_classification _____________________________________________________________________________
+
+    def test_sfs_with_classification():
+        X, y = load_iris(return_X_y=True)
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+    
+        knn = KNeighborsClassifier(n_neighbors=3)
+        sfs = SFS(knn, k_features=3, forward=True, floating=False, scoring='accuracy', cv=5)
+>       sfs = sfs.fit(X_train, y_train)
+
+pytest/integration_tests/tests/test_sfs_with_classification.py:34: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+mlxtend/mlxtend/feature_selection/sequential_feature_selector.py:649: in fit
+    self.finalize_fit()
+mlxtend/mlxtend/feature_selection/sequential_feature_selector.py:654: in finalize_fit
+    max_score = np.NINF
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+attr = 'NINF'
+
+    def __getattr__(attr):
+        # Warn for expired attributes
+        import warnings
+    
+        if attr == "linalg":
+            import numpy.linalg as linalg
+            return linalg
+        elif attr == "fft":
+            import numpy.fft as fft
+            return fft
+        elif attr == "dtypes":
+            import numpy.dtypes as dtypes
+            return dtypes
+        elif attr == "random":
+            import numpy.random as random
+            return random
+        elif attr == "polynomial":
+            import numpy.polynomial as polynomial
+            return polynomial
+        elif attr == "ma":
+            import numpy.ma as ma
+            return ma
+        elif attr == "ctypeslib":
+            import numpy.ctypeslib as ctypeslib
+            return ctypeslib
+        elif attr == "exceptions":
+            import numpy.exceptions as exceptions
+            return exceptions
+        elif attr == "testing":
+            import numpy.testing as testing
+            return testing
+        elif attr == "matlib":
+            import numpy.matlib as matlib
+            return matlib
+        elif attr == "f2py":
+            import numpy.f2py as f2py
+            return f2py
+        elif attr == "typing":
+            import numpy.typing as typing
+            return typing
+        elif attr == "rec":
+            import numpy.rec as rec
+            return rec
+        elif attr == "char":
+            import numpy.char as char
+            return char
+        elif attr == "array_api":
+            raise AttributeError("`numpy.array_api` is not available from "
+                                 "numpy 2.0 onwards", name=None)
+        elif attr == "core":
+            import numpy.core as core
+            return core
+        elif attr == "strings":
+            import numpy.strings as strings
+            return strings
+        elif attr == "distutils":
+            if 'distutils' in __numpy_submodules__:
+                import numpy.distutils as distutils
+                return distutils
+            else:
+                raise AttributeError("`numpy.distutils` is not available from "
+                                     "Python 3.12 onwards", name=None)
+    
+        if attr in __future_scalars__:
+            # And future warnings for those that will change, but also give
+            # the AttributeError
+            warnings.warn(
+                f"In the future `np.{attr}` will be defined as the "
+                "corresponding NumPy scalar.", FutureWarning, stacklevel=2)
+    
+        if attr in __former_attrs__:
+            raise AttributeError(__former_attrs__[attr], name=None)
+    
+        if attr in __expired_attributes__:
+>           raise AttributeError(
+                f"`np.{attr}` was removed in the NumPy 2.0 release. "
+                f"{__expired_attributes__[attr]}",
+                name=None
+            )
+E           AttributeError: `np.NINF` was removed in the NumPy 2.0 release. Use `-np.inf` instead.
+
+../../../../.local/share/virtualenvs/2023_Analysis_mlxtend-LxSEf0Dd/lib/python3.11/site-packages/numpy/__init__.py:400: AttributeError
+______________________________________________________________________ test_sfs_with_one_feature_classification _______________________________________________________________________
+
+    def test_sfs_with_one_feature_classification():
+        X, y = load_iris(return_X_y=True)
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+    
+        knn = KNeighborsClassifier(n_neighbors=3)
+        sfs = SFS(knn, k_features=1, forward=True, floating=False, scoring='accuracy', cv=5)
+>       sfs = sfs.fit(X_train, y_train)
+
+pytest/integration_tests/tests/test_sfs_with_classification.py:56: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+mlxtend/mlxtend/feature_selection/sequential_feature_selector.py:649: in fit
+    self.finalize_fit()
+mlxtend/mlxtend/feature_selection/sequential_feature_selector.py:654: in finalize_fit
+    max_score = np.NINF
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+attr = 'NINF'
+
+    def __getattr__(attr):
+        # Warn for expired attributes
+        import warnings
+    
+        if attr == "linalg":
+            import numpy.linalg as linalg
+            return linalg
+        elif attr == "fft":
+            import numpy.fft as fft
+            return fft
+        elif attr == "dtypes":
+            import numpy.dtypes as dtypes
+            return dtypes
+        elif attr == "random":
+            import numpy.random as random
+            return random
+        elif attr == "polynomial":
+            import numpy.polynomial as polynomial
+            return polynomial
+        elif attr == "ma":
+            import numpy.ma as ma
+            return ma
+        elif attr == "ctypeslib":
+            import numpy.ctypeslib as ctypeslib
+            return ctypeslib
+        elif attr == "exceptions":
+            import numpy.exceptions as exceptions
+            return exceptions
+        elif attr == "testing":
+            import numpy.testing as testing
+            return testing
+        elif attr == "matlib":
+            import numpy.matlib as matlib
+            return matlib
+        elif attr == "f2py":
+            import numpy.f2py as f2py
+            return f2py
+        elif attr == "typing":
+            import numpy.typing as typing
+            return typing
+        elif attr == "rec":
+            import numpy.rec as rec
+            return rec
+        elif attr == "char":
+            import numpy.char as char
+            return char
+        elif attr == "array_api":
+            raise AttributeError("`numpy.array_api` is not available from "
+                                 "numpy 2.0 onwards", name=None)
+        elif attr == "core":
+            import numpy.core as core
+            return core
+        elif attr == "strings":
+            import numpy.strings as strings
+            return strings
+        elif attr == "distutils":
+            if 'distutils' in __numpy_submodules__:
+                import numpy.distutils as distutils
+                return distutils
+            else:
+                raise AttributeError("`numpy.distutils` is not available from "
+                                     "Python 3.12 onwards", name=None)
+    
+        if attr in __future_scalars__:
+            # And future warnings for those that will change, but also give
+            # the AttributeError
+            warnings.warn(
+                f"In the future `np.{attr}` will be defined as the "
+                "corresponding NumPy scalar.", FutureWarning, stacklevel=2)
+    
+        if attr in __former_attrs__:
+            raise AttributeError(__former_attrs__[attr], name=None)
+    
+        if attr in __expired_attributes__:
+>           raise AttributeError(
+                f"`np.{attr}` was removed in the NumPy 2.0 release. "
+                f"{__expired_attributes__[attr]}",
+                name=None
+            )
+E           AttributeError: `np.NINF` was removed in the NumPy 2.0 release. Use `-np.inf` instead.
+
+../../../../.local/share/virtualenvs/2023_Analysis_mlxtend-LxSEf0Dd/lib/python3.11/site-packages/numpy/__init__.py:400: AttributeError
+______________________________________________________________________ test_sfs_with_all_features_classification ______________________________________________________________________
+
+    def test_sfs_with_all_features_classification():
+        # zapravo jedan manje od "all" po definiciji:
+        # k_features : int or tuple or str (default: 1)
+        #     Number of features to select,
+        #     where k_features < the full feature set.
+        X, y = load_iris(return_X_y=True)
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+    
+        knn = KNeighborsClassifier(n_neighbors=3)
+        sfs = SFS(knn, k_features=3, forward=True, floating=False, scoring='accuracy', cv=5)  # Svi atributi
+>       sfs = sfs.fit(X_train, y_train)
+
+pytest/integration_tests/tests/test_sfs_with_classification.py:82: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+mlxtend/mlxtend/feature_selection/sequential_feature_selector.py:649: in fit
+    self.finalize_fit()
+mlxtend/mlxtend/feature_selection/sequential_feature_selector.py:654: in finalize_fit
+    max_score = np.NINF
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+attr = 'NINF'
+
+    def __getattr__(attr):
+        # Warn for expired attributes
+        import warnings
+    
+        if attr == "linalg":
+            import numpy.linalg as linalg
+            return linalg
+        elif attr == "fft":
+            import numpy.fft as fft
+            return fft
+        elif attr == "dtypes":
+            import numpy.dtypes as dtypes
+            return dtypes
+        elif attr == "random":
+            import numpy.random as random
+            return random
+        elif attr == "polynomial":
+            import numpy.polynomial as polynomial
+            return polynomial
+        elif attr == "ma":
+            import numpy.ma as ma
+            return ma
+        elif attr == "ctypeslib":
+            import numpy.ctypeslib as ctypeslib
+            return ctypeslib
+        elif attr == "exceptions":
+            import numpy.exceptions as exceptions
+            return exceptions
+        elif attr == "testing":
+            import numpy.testing as testing
+            return testing
+        elif attr == "matlib":
+            import numpy.matlib as matlib
+            return matlib
+        elif attr == "f2py":
+            import numpy.f2py as f2py
+            return f2py
+        elif attr == "typing":
+            import numpy.typing as typing
+            return typing
+        elif attr == "rec":
+            import numpy.rec as rec
+            return rec
+        elif attr == "char":
+            import numpy.char as char
+            return char
+        elif attr == "array_api":
+            raise AttributeError("`numpy.array_api` is not available from "
+                                 "numpy 2.0 onwards", name=None)
+        elif attr == "core":
+            import numpy.core as core
+            return core
+        elif attr == "strings":
+            import numpy.strings as strings
+            return strings
+        elif attr == "distutils":
+            if 'distutils' in __numpy_submodules__:
+                import numpy.distutils as distutils
+                return distutils
+            else:
+                raise AttributeError("`numpy.distutils` is not available from "
+                                     "Python 3.12 onwards", name=None)
+    
+        if attr in __future_scalars__:
+            # And future warnings for those that will change, but also give
+            # the AttributeError
+            warnings.warn(
+                f"In the future `np.{attr}` will be defined as the "
+                "corresponding NumPy scalar.", FutureWarning, stacklevel=2)
+    
+        if attr in __former_attrs__:
+            raise AttributeError(__former_attrs__[attr], name=None)
+    
+        if attr in __expired_attributes__:
+>           raise AttributeError(
+                f"`np.{attr}` was removed in the NumPy 2.0 release. "
+                f"{__expired_attributes__[attr]}",
+                name=None
+            )
+E           AttributeError: `np.NINF` was removed in the NumPy 2.0 release. Use `-np.inf` instead.
+
+../../../../.local/share/virtualenvs/2023_Analysis_mlxtend-LxSEf0Dd/lib/python3.11/site-packages/numpy/__init__.py:400: AttributeError
+______________________________________________________________________________ test_sfs_with_regression _______________________________________________________________________________
+
+    def test_sfs_with_regression():
+        X, y = make_regression(n_samples=100, n_features=5, noise=0.1, random_state=42)
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+    
+        lr = LinearRegression()
+        sfs = SFS(lr, k_features=3, forward=True, floating=False, scoring='r2', cv=5)
+>       sfs = sfs.fit(X_train, y_train)
+
+pytest/integration_tests/tests/test_sfs_with_regression.py:32: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+mlxtend/mlxtend/feature_selection/sequential_feature_selector.py:649: in fit
+    self.finalize_fit()
+mlxtend/mlxtend/feature_selection/sequential_feature_selector.py:654: in finalize_fit
+    max_score = np.NINF
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+attr = 'NINF'
+
+    def __getattr__(attr):
+        # Warn for expired attributes
+        import warnings
+    
+        if attr == "linalg":
+            import numpy.linalg as linalg
+            return linalg
+        elif attr == "fft":
+            import numpy.fft as fft
+            return fft
+        elif attr == "dtypes":
+            import numpy.dtypes as dtypes
+            return dtypes
+        elif attr == "random":
+            import numpy.random as random
+            return random
+        elif attr == "polynomial":
+            import numpy.polynomial as polynomial
+            return polynomial
+        elif attr == "ma":
+            import numpy.ma as ma
+            return ma
+        elif attr == "ctypeslib":
+            import numpy.ctypeslib as ctypeslib
+            return ctypeslib
+        elif attr == "exceptions":
+            import numpy.exceptions as exceptions
+            return exceptions
+        elif attr == "testing":
+            import numpy.testing as testing
+            return testing
+        elif attr == "matlib":
+            import numpy.matlib as matlib
+            return matlib
+        elif attr == "f2py":
+            import numpy.f2py as f2py
+            return f2py
+        elif attr == "typing":
+            import numpy.typing as typing
+            return typing
+        elif attr == "rec":
+            import numpy.rec as rec
+            return rec
+        elif attr == "char":
+            import numpy.char as char
+            return char
+        elif attr == "array_api":
+            raise AttributeError("`numpy.array_api` is not available from "
+                                 "numpy 2.0 onwards", name=None)
+        elif attr == "core":
+            import numpy.core as core
+            return core
+        elif attr == "strings":
+            import numpy.strings as strings
+            return strings
+        elif attr == "distutils":
+            if 'distutils' in __numpy_submodules__:
+                import numpy.distutils as distutils
+                return distutils
+            else:
+                raise AttributeError("`numpy.distutils` is not available from "
+                                     "Python 3.12 onwards", name=None)
+    
+        if attr in __future_scalars__:
+            # And future warnings for those that will change, but also give
+            # the AttributeError
+            warnings.warn(
+                f"In the future `np.{attr}` will be defined as the "
+                "corresponding NumPy scalar.", FutureWarning, stacklevel=2)
+    
+        if attr in __former_attrs__:
+            raise AttributeError(__former_attrs__[attr], name=None)
+    
+        if attr in __expired_attributes__:
+>           raise AttributeError(
+                f"`np.{attr}` was removed in the NumPy 2.0 release. "
+                f"{__expired_attributes__[attr]}",
+                name=None
+            )
+E           AttributeError: `np.NINF` was removed in the NumPy 2.0 release. Use `-np.inf` instead.
+
+../../../../.local/share/virtualenvs/2023_Analysis_mlxtend-LxSEf0Dd/lib/python3.11/site-packages/numpy/__init__.py:400: AttributeError
+______________________________________________________________________________ test_sfs_with_one_feature ______________________________________________________________________________
+
+    def test_sfs_with_one_feature():
+        X, y = make_regression(n_samples=100, n_features=5, noise=0.1, random_state=42)
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+    
+        lr = LinearRegression()
+        sfs = SFS(lr, k_features=1, forward=True, floating=False, scoring='r2', cv=5)
+>       sfs = sfs.fit(X_train, y_train)
+
+pytest/integration_tests/tests/test_sfs_with_regression.py:56: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+mlxtend/mlxtend/feature_selection/sequential_feature_selector.py:649: in fit
+    self.finalize_fit()
+mlxtend/mlxtend/feature_selection/sequential_feature_selector.py:654: in finalize_fit
+    max_score = np.NINF
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+attr = 'NINF'
+
+    def __getattr__(attr):
+        # Warn for expired attributes
+        import warnings
+    
+        if attr == "linalg":
+            import numpy.linalg as linalg
+            return linalg
+        elif attr == "fft":
+            import numpy.fft as fft
+            return fft
+        elif attr == "dtypes":
+            import numpy.dtypes as dtypes
+            return dtypes
+        elif attr == "random":
+            import numpy.random as random
+            return random
+        elif attr == "polynomial":
+            import numpy.polynomial as polynomial
+            return polynomial
+        elif attr == "ma":
+            import numpy.ma as ma
+            return ma
+        elif attr == "ctypeslib":
+            import numpy.ctypeslib as ctypeslib
+            return ctypeslib
+        elif attr == "exceptions":
+            import numpy.exceptions as exceptions
+            return exceptions
+        elif attr == "testing":
+            import numpy.testing as testing
+            return testing
+        elif attr == "matlib":
+            import numpy.matlib as matlib
+            return matlib
+        elif attr == "f2py":
+            import numpy.f2py as f2py
+            return f2py
+        elif attr == "typing":
+            import numpy.typing as typing
+            return typing
+        elif attr == "rec":
+            import numpy.rec as rec
+            return rec
+        elif attr == "char":
+            import numpy.char as char
+            return char
+        elif attr == "array_api":
+            raise AttributeError("`numpy.array_api` is not available from "
+                                 "numpy 2.0 onwards", name=None)
+        elif attr == "core":
+            import numpy.core as core
+            return core
+        elif attr == "strings":
+            import numpy.strings as strings
+            return strings
+        elif attr == "distutils":
+            if 'distutils' in __numpy_submodules__:
+                import numpy.distutils as distutils
+                return distutils
+            else:
+                raise AttributeError("`numpy.distutils` is not available from "
+                                     "Python 3.12 onwards", name=None)
+    
+        if attr in __future_scalars__:
+            # And future warnings for those that will change, but also give
+            # the AttributeError
+            warnings.warn(
+                f"In the future `np.{attr}` will be defined as the "
+                "corresponding NumPy scalar.", FutureWarning, stacklevel=2)
+    
+        if attr in __former_attrs__:
+            raise AttributeError(__former_attrs__[attr], name=None)
+    
+        if attr in __expired_attributes__:
+>           raise AttributeError(
+                f"`np.{attr}` was removed in the NumPy 2.0 release. "
+                f"{__expired_attributes__[attr]}",
+                name=None
+            )
+E           AttributeError: `np.NINF` was removed in the NumPy 2.0 release. Use `-np.inf` instead.
+
+../../../../.local/share/virtualenvs/2023_Analysis_mlxtend-LxSEf0Dd/lib/python3.11/site-packages/numpy/__init__.py:400: AttributeError
+_____________________________________________________________________________ test_sfs_with_all_features ______________________________________________________________________________
+
+    def test_sfs_with_all_features():
+        # zapravo jedan manje od "all" po definiciji:
+        # k_features : int or tuple or str (default: 1)
+        #     Number of features to select,
+        #     where k_features < the full feature set.
+        X, y = make_regression(n_samples=100, n_features=5, noise=0.1, random_state=42)
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+    
+        lr = LinearRegression()
+        sfs = SFS(lr, k_features=4, forward=True, floating=False, scoring='r2', cv=5)
+>       sfs = sfs.fit(X_train, y_train)
+
+pytest/integration_tests/tests/test_sfs_with_regression.py:83: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+mlxtend/mlxtend/feature_selection/sequential_feature_selector.py:649: in fit
+    self.finalize_fit()
+mlxtend/mlxtend/feature_selection/sequential_feature_selector.py:654: in finalize_fit
+    max_score = np.NINF
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+attr = 'NINF'
+
+    def __getattr__(attr):
+        # Warn for expired attributes
+        import warnings
+    
+        if attr == "linalg":
+            import numpy.linalg as linalg
+            return linalg
+        elif attr == "fft":
+            import numpy.fft as fft
+            return fft
+        elif attr == "dtypes":
+            import numpy.dtypes as dtypes
+            return dtypes
+        elif attr == "random":
+            import numpy.random as random
+            return random
+        elif attr == "polynomial":
+            import numpy.polynomial as polynomial
+            return polynomial
+        elif attr == "ma":
+            import numpy.ma as ma
+            return ma
+        elif attr == "ctypeslib":
+            import numpy.ctypeslib as ctypeslib
+            return ctypeslib
+        elif attr == "exceptions":
+            import numpy.exceptions as exceptions
+            return exceptions
+        elif attr == "testing":
+            import numpy.testing as testing
+            return testing
+        elif attr == "matlib":
+            import numpy.matlib as matlib
+            return matlib
+        elif attr == "f2py":
+            import numpy.f2py as f2py
+            return f2py
+        elif attr == "typing":
+            import numpy.typing as typing
+            return typing
+        elif attr == "rec":
+            import numpy.rec as rec
+            return rec
+        elif attr == "char":
+            import numpy.char as char
+            return char
+        elif attr == "array_api":
+            raise AttributeError("`numpy.array_api` is not available from "
+                                 "numpy 2.0 onwards", name=None)
+        elif attr == "core":
+            import numpy.core as core
+            return core
+        elif attr == "strings":
+            import numpy.strings as strings
+            return strings
+        elif attr == "distutils":
+            if 'distutils' in __numpy_submodules__:
+                import numpy.distutils as distutils
+                return distutils
+            else:
+                raise AttributeError("`numpy.distutils` is not available from "
+                                     "Python 3.12 onwards", name=None)
+    
+        if attr in __future_scalars__:
+            # And future warnings for those that will change, but also give
+            # the AttributeError
+            warnings.warn(
+                f"In the future `np.{attr}` will be defined as the "
+                "corresponding NumPy scalar.", FutureWarning, stacklevel=2)
+    
+        if attr in __former_attrs__:
+            raise AttributeError(__former_attrs__[attr], name=None)
+    
+        if attr in __expired_attributes__:
+>           raise AttributeError(
+                f"`np.{attr}` was removed in the NumPy 2.0 release. "
+                f"{__expired_attributes__[attr]}",
+                name=None
+            )
+E           AttributeError: `np.NINF` was removed in the NumPy 2.0 release. Use `-np.inf` instead.
+
+../../../../.local/share/virtualenvs/2023_Analysis_mlxtend-LxSEf0Dd/lib/python3.11/site-packages/numpy/__init__.py:400: AttributeError
+================================================================================== warnings summary ===================================================================================
+pytest/unit_tests/tests/test_minmax_scaling.py::test_minmax_scaling_constant_values
+pytest/unit_tests/tests/test_minmax_scaling.py::test_minmax_scaling_single_row
+  /home/mithrandir/Workspace/matf/vs/2023_Analysis_mlxtend/mlxtend/mlxtend/preprocessing/scaling.py:51: RuntimeWarning: invalid value encountered in divide
+    ary_newt[:, columns] = numerator / denominator
+
+pytest/unit_tests/tests/test_standardize_scaling.py::test_standardize_empty_data
+  /home/mithrandir/Workspace/matf/vs/2023_Analysis_mlxtend/mlxtend/mlxtend/preprocessing/scaling.py:122: RuntimeWarning: Mean of empty slice.
+    "avgs": ary_newt[:, columns].mean(axis=0),
+
+pytest/unit_tests/tests/test_standardize_scaling.py::test_standardize_empty_data
+  /home/mithrandir/.local/share/virtualenvs/2023_Analysis_mlxtend-LxSEf0Dd/lib/python3.11/site-packages/numpy/_core/_methods.py:139: RuntimeWarning: invalid value encountered in divide
+    ret = um.true_divide(
+
+pytest/unit_tests/tests/test_standardize_scaling.py::test_standardize_empty_data
+  /home/mithrandir/.local/share/virtualenvs/2023_Analysis_mlxtend-LxSEf0Dd/lib/python3.11/site-packages/numpy/_core/_methods.py:227: RuntimeWarning: Degrees of freedom <= 0 for slice
+    ret = _var(a, axis=axis, dtype=dtype, out=out, ddof=ddof,
+
+pytest/unit_tests/tests/test_standardize_scaling.py::test_standardize_empty_data
+  /home/mithrandir/.local/share/virtualenvs/2023_Analysis_mlxtend-LxSEf0Dd/lib/python3.11/site-packages/numpy/_core/_methods.py:184: RuntimeWarning: invalid value encountered in divide
+    arrmean = um.true_divide(arrmean, div, out=arrmean,
+
+pytest/unit_tests/tests/test_standardize_scaling.py::test_standardize_empty_data
+  /home/mithrandir/.local/share/virtualenvs/2023_Analysis_mlxtend-LxSEf0Dd/lib/python3.11/site-packages/numpy/_core/_methods.py:216: RuntimeWarning: invalid value encountered in divide
+    ret = um.true_divide(
+
+pytest/integration_tests/tests/test_perceptron_learning.py: 1000 warnings
+  /home/mithrandir/Workspace/matf/vs/2023_Analysis_mlxtend/mlxtend/mlxtend/classifier/perceptron.py:88: DeprecationWarning: Conversion of an array with ndim > 0 to a scalar is deprecated, and will error in future. Ensure you extract a single element from your array before performing this operation. (Deprecated NumPy 1.25.)
+    errors += int(update != 0.0)
+
+pytest/integration_tests/tests/test_sfs_with_classification.py: 23 warnings
+pytest/integration_tests/tests/test_sfs_with_regression.py: 31 warnings
+  /home/mithrandir/.local/share/virtualenvs/2023_Analysis_mlxtend-LxSEf0Dd/lib/python3.11/site-packages/sklearn/model_selection/_validation.py:73: FutureWarning: `fit_params` is deprecated and will be removed in version 1.6. Pass parameters via `params` instead.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=============================================================================== short test summary info ===============================================================================
+FAILED pytest/unit_tests/tests/test_minmax_scaling.py::test_minmax_scaling_constant_values - AssertionError: MinMax skaliranje nije ispravno za konstantne vrednosti!
+FAILED pytest/unit_tests/tests/test_minmax_scaling.py::test_minmax_scaling_single_row - AssertionError: MinMax skaliranje nije ispravno kada se obrađuje samo jedan red podataka!
+FAILED pytest/unit_tests/tests/test_minmax_scaling.py::test_minmax_scaling_nan_values - AssertionError: MinMax skaliranje nije ispravno kada se obrađuju NaN vrednosti!
+FAILED pytest/unit_tests/tests/test_standardize_scaling.py::test_standardize_constant_values - AssertionError: Standardizacija nije ispravna za konstantne vrednosti!
+FAILED pytest/unit_tests/tests/test_standardize_scaling.py::test_standardize_single_row - AssertionError: Standardizacija nije ispravna kada se obrađuje samo jedan red podataka!
+FAILED pytest/unit_tests/tests/test_standardize_scaling.py::test_standardize_empty_data - IndexError: index 0 is out of bounds for axis 0 with size 0
+FAILED pytest/unit_tests/tests/test_standardize_scaling.py::test_standardize_nan_values - AssertionError: Standardizacija nije ispravna kada se obrađuju NaN vrednosti!
+FAILED pytest/unit_tests/tests/test_text_tokenizer.py::test_tokenizer_words_and_emoticons - AssertionError: Rezultat funkcije tokenizer_words_and_emoticons nije ispravan!
+FAILED pytest/integration_tests/tests/test_sfs_with_classification.py::test_sfs_with_classification - AttributeError: `np.NINF` was removed in the NumPy 2.0 release. Use `-np.inf` instead.
+FAILED pytest/integration_tests/tests/test_sfs_with_classification.py::test_sfs_with_one_feature_classification - AttributeError: `np.NINF` was removed in the NumPy 2.0 release. Use `-np.inf` instead.
+FAILED pytest/integration_tests/tests/test_sfs_with_classification.py::test_sfs_with_all_features_classification - AttributeError: `np.NINF` was removed in the NumPy 2.0 release. Use `-np.inf` instead.
+FAILED pytest/integration_tests/tests/test_sfs_with_regression.py::test_sfs_with_regression - AttributeError: `np.NINF` was removed in the NumPy 2.0 release. Use `-np.inf` instead.
+FAILED pytest/integration_tests/tests/test_sfs_with_regression.py::test_sfs_with_one_feature - AttributeError: `np.NINF` was removed in the NumPy 2.0 release. Use `-np.inf` instead.
+FAILED pytest/integration_tests/tests/test_sfs_with_regression.py::test_sfs_with_all_features - AttributeError: `np.NINF` was removed in the NumPy 2.0 release. Use `-np.inf` instead.
+==================================================================== 14 failed, 25 passed, 1061 warnings in 2.71s =====================================================================
