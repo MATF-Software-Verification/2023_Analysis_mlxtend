@@ -131,7 +131,7 @@ index d66096a9..34b44b5b 100644
  
          Parameters
 diff --git a/mlxtend/evaluate/bootstrap_point632.py b/mlxtend/evaluate/bootstrap_point632.py
-index 315e58c3..31d6e3c8 100644
+index 315e58c3..f3b6b658 100644
 --- a/mlxtend/evaluate/bootstrap_point632.py
 +++ b/mlxtend/evaluate/bootstrap_point632.py
 @@ -53,7 +53,7 @@ def bootstrap_point632_score(
@@ -157,7 +157,7 @@ index 315e58c3..31d6e3c8 100644
      if not isinstance(n_splits, int) or n_splits < 1:
          raise ValueError(
 -            "Number of splits must be" " greater than 1. Got %s." % n_splits
-+            f"Number of splits must be greater than 1. Got {n_splits}.
++            f"Number of splits must be greater than 1. Got {n_splits}."
          )
  
      allowed_methods = (".632", ".632+", "oob")
