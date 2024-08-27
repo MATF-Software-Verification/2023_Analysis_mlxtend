@@ -23,10 +23,9 @@ Korišćeni su sledeći alati:
 - [`pytest`](pytest/README.md)
     - Jedinično testiranje
     - Integraciono testiranje
-- [`coverage.py`](coveragepy/README.md)
-    - Praćenje pokrivenosti koda za jedinično i integraciono testiranje
+    - [`coverage.py`](pytest/README.md#praćenje-pokrivenosti) je korišćen za praćenje pokrivenosti koda
 - [`pylint`](pylint/README.md)
-    - Statička analiza koda
+    - Statička analiza kvaliteta koda
 - TODO *profajler*
 
 ## Preporuka za instalaciju alata
@@ -38,6 +37,7 @@ pipenv shell (aktiviranje okruženja)
 pip install -r requirements.txt (instalacija svih potrebnih paketa)
 ```
 Tokom razvoja projekta, biblioteka `mlxtend` je instalirana sa opcijom `-e`, kako bi se promene te biblioteke odmah registrovale u sistemu što umnogome olakšava rad:
-```
+
+```bash
 pip install -e mlxtend
 ```

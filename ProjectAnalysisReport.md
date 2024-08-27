@@ -336,31 +336,197 @@ Sporost izvršavanja se lako podnosi kada se uzmu u obzir benefiti korišćenja 
 
 ### Prva pokretanja
 
-Inicijalnim pokretanjem *linting* analize, pre bilo kakvih ispravki i bez korišćenja dodatnih opcija, dobija se pregršt upozorenja, ali i nemali broj potencijalnih grešaka. Takođe, na osnovu celokupne analize dobija se ocena koja označava koliko je kvalitetan kôd koji se analizira. Inicijalna ocena je **7.19/10**. Zanimljivo (ili ne), nakon svih izmena i ispravki bagova, koji su otkriveni jediničnim i integracionim testiranjem, a zatim ponovnog pokretanja *linting* analize, ocena je ostala identična. 
+Inicijalnim pokretanjem *linting* analize, pre bilo kakvih ispravki i bez korišćenja dodatnih opcija, dobija se pregršt upozorenja, ali i nemali broj potencijalnih grešaka. Takođe, na osnovu celokupne analize dobija se ocena koja označava koliko je kvalitetan kôd koji se analizira. Inicijalna ocena je **7.19/10**, a izveštaj je dostupan u datoteci [00_pylint_initial_report.txt](pylint/reports/00_pylint_initial_report.txt). Zanimljivo (ili ne), nakon svih izmena i ispravki bagova, koji su otkriveni jediničnim i integracionim testiranjem, a zatim ponovnog pokretanja *linting* analize, ocena je ostala identična ([01_pylint_bugs_fixed_report.txt](pylint/reports/01_pylint_bugs_fixed_report.txt)). 
 
-![Linting Initial](pylint/imgs/00_pylint_initial_run.png)
+```
+Your code has been rated at 7.19/10 (previous run: 7.19/10, +0.00)
+```
 
-Pokretanja ovog alata se mogu učiniti dosta smislenijim ukoliko se prilagodi konkretnom projektu koji se analizira. Na primer, u projektu mašinskog učenja je ustaljeno i očekivano pojavljivanje imena promenljivih koja počinju velikim slovom (npr. baratanje matricama), a možemo primetiti veliki broj preporuka koje ukazuju baš na to. Potrebno je dakle prilagoditi upotrebu ovog alata primenom odgovarajućih opcija. Da bi se ispoštovale smernice autora biblioteke, koristiće se slične opcije za ograničavanje preporuka koje su korišćene u konfiguracionoj datoteci za alat `flake8`, koji je korišćen u glavnom repozitorijumu.
+Pokretanja ovog alata se mogu učiniti dosta smislenijim ukoliko se prilagodi konkretnom projektu koji se analizira. Na primer, u projektu mašinskog učenja je ustaljeno i očekivano pojavljivanje imena promenljivih koja počinju velikim slovom (npr. baratanje matricama), a možemo primetiti veliki broj preporuka koje ukazuju baš na to. Potrebno je dakle prilagoditi upotrebu ovog alata primenom odgovarajućih opcija. Da bi se ispoštovale smernice autora biblioteke, koristiće se slične opcije za ograničavanje preporuka koje su korišćene u konfiguracionoj datoteci za alat `flake8`, koji je korišćen u glavnom repozitorijumu, a zatim će se izvršiti neka dodatna prilagođavanja. Mnoge stvari biće ispravljene.
 
-### Dodavanje odgovarajućih opcija za analizirani projekat
+### Dodavanje opcija za analiziranje projekta
 
 Kako bismo započeli dodavanje željenih ograničenja za provere, prvo generišemo datoteku `.pylintrc` sa podrazumevanim vrednostima korišćenjem sledeće komande:
 
 ```
 pylint --generate-rcfile > .pylintrc
 ```
-Dodavanje imena promenljivih
 
-Dodavanje flega za numpy...
+Dodate su naredne opcije, kako bi se ispratila uputstva iz konfiguracione datoteke za alat `flake8`:
 
-### Zaključci
+```
+[MESSAGES CONTROL]
 
-## alat-z
+enable = C, E, F, W
+disable=...
+    C0326, C0330, C0301, W0401, W0614, R0912, R, I
+
+[FORMAT]
+
+max-line-length=89  # PROMENJENO sa 100
+```
+
+Značenja ovih kodova su sledeća:
+- C: praćenje konvencije;
+- E: sintaksne greške, neispravno korišćenje varijabli, itd.
+- F: označava fatalne greške, tj. greške zbog kojih `pylint` nije u stanju da nastavi analizu koda (npr. nedostajući fajlove ili moduli koje je `pylint` pokušao da učita i analizira) i ove greške zahtevaju hitno ispravljanje;
+- W: ova oznaka se koristi za upozorenja koja označavaju potencijalne probleme u kodu;
+- C0326 (bad-whitespace): ova opcija se odnosi na provere neodgovarajućeg ili nepravilnog razmaka u kodu;
+- C0330 (bad-continuation): ova opcija detektuje loše formatirane linije koda prilikom preloma linija;
+- C0301 (line-too-long): predugačka linija;
+- W0401 (wildcard-import): `pylint` prijavljuje upozorenje kada se koristi generički uvoz (`import *`). Ovaj stil uvoza može dovesti do konfuzije i problema u kodu jer nije jasno koje tačno funkcije ili klase se uvoze;
+- W0614 (unused-import): ova opcija detektuje kada je modul ili objekat uvezen, ali se ne koristi nigde u kodu
+- R0912 (too-many-branches): kada funkcija ili metoda ima previše grana, odnosno funkcije su potencijaln prekomplikovane;
+- R (refactor): ova kategorija pokriva sve preporuke za refaktorisanje koda, kao što su funkcije sa previše parametara, previše grana, ili duboke ugnježdene strukture;
+- I (ignored): ova opcija ukazuje na deo koda koji je ignorisan ili isključen iz `pylint` analize putem specifičnih komentara (npr. `# pylint: disable=C0326`), pošto se takvim eksplicitnim navođem naglašava `pylint`-u da tu liniju ne uključi u izveštaj.
+
+Dodata su i imena promenljivih za koje ima smisla koristiti velika slova, a pronađena su u projektu:
+
+```
+[VARIABLES]
+
+good-names= X,X_train,X_test,X_data,X_1,X_2,X_dataset,R,X_boot,X_cols,
+            sAC,sA,sC,Xb,Q,R,X_tr,X_fl,X_ary,check_Xy,X_pos,X_neg,L1_term,L2_term,
+            grad_W_1,grad_B_1,grad_W_out,grad_B_out,dW_1,dB_1,dW_out,dB_out,
+            A,B,A_mA,B_mB,ssA,ssB,names_cols_A,names_cols_B,X_pca,X_predict,
+            Z,X_highlight,X_grid,copy_X,X_projected_,X_,K,N,S_W,S_B,IDX,conf_AC,conf_CA
+```
+
+Dalje, dodajemo sledeću opciju prilikom pokretanja alata `--extension-pkg-whitelist=numpy` da bismo izbegli prikazivanje određenih upozorenja, koja su praktično lažna upozorenja nastala u starijim verzijama ovog alata, te je počev od neke od novijih verzija dodata mogućnost korišćenja ove opcije za ispravan rad sa `NumPy` bibliotekom, odnosno ispravnu analizu.
+
+*Tokom rada, može biti korisno isključiti obaveštenja koja generišu dosta upozorenja i grešaka poput `C0114 (missing-module-docstring)`, koja naglašava da se ne prati standard za dokumentovanje modula.*
+
+### Ponovno pokretanje analize
+
+Nakon ovih dodatih opcija, pokrećemo analizu na sledeći način (nakon što smo primenili odgovarajući *patch*):
+
+```
+pylint --extension-pkg-whitelist=numpy \
+    mlxtend/mlxtend \
+    > pylint/reports/02_pylint_options_added_report.txt
+```
+
+Analiza daje rezultate dostupne u datoteci [02_pylint_options_added_report.txt](pylint/reports/02_pylint_options_added_report.txt). Vidimo da je nakon prilagođavanja analize konkretnom projektu, ocena projekta znatno bolja, što je i očekivano:
+
+```
+Your code has been rated at 8.40/10 (previous run: 8.40/10, +1.21)
+```
+
+U nastavku će se pristupiti korekcijama, prateći smernice iz ovog izveštaja.
+
+### Ispravke
+
+1. Prvi tip ispravki koji je vršen je reformatiranje stringova u moderniju verziju `f-string`, koja umnogome povećava čitljivost tih delova koda. Upozorenje izgleda ovako:
+
+    ```
+    mlxtend/mlxtend/text/names.py:103:17: C0209: Formatting a regular string which could be an f-string (consider-using-f-string)
+    ```
+
+    Pronađeno je oko 100 ovakvih situacija. Ispravke su vršene uz pomoć alata `GitHub Copilot`, a u nastavku sledeći primer originalnog koda i ispravke:
+
+    ```python
+    raise ValueError(
+        "The `method` must " "be in %s. Got %s." % (allowed_methods, method)
+    )
+    ```
+
+    Ispravka:
+
+    ```python
+    raise ValueError(
+        f"The `method` must be in {allowed_methods}. Got {method}."
+    )
+    ```
+
+2. Sledeći primer koda koji možemo srediti je primer nedostižnog koda. Ovo se dogodilo samo jednom u projektu i uklonjeno je, a u pitanju je bila nedostižna return naredba, jer će se prehodno vratiti izuzetak:
+
+    ```
+    mlxtend/mlxtend/externals/adjust_text.py:637:12: W0101: Unreachable code (unreachable)
+    ```
+
+    ```python
+    try:
+        add_bboxes = get_bboxes(add_objects, r, (1, 1), ax)
+    except ValueError:
+        raise ValueError(
+            "Can't get bounding boxes from add_objects - is'\
+                        it a flat list of matplotlib objects?"
+        )
+        return
+    ```
+
+3. Detektovano je oko 30 primera implicitne konkatenacije stringova:
+
+    ```
+    mlxtend/mlxtend/evaluate/lift_score.py:60:0: W1404: Implicit string concatenation found in call (implicit-str-concat)
+    ```
+
+    Primer, koji se rešava samo spajanjem ovog stringa u jedan:
+
+    ```python
+    "`y_target` and `y_predicted`" "don't have the same number of elements."
+    ```
+
+4. Još jedno upozorenje jedino svoje vrste nam ukazuje na nepotrebno ugnježdavanje funkcija `min()` i `max()`. Ovakav ugnježdeni poziv funkcija možemo izbeći korišćenjem operatora `*` za raspakivanje vrednosti prilikom poziva funkcije.
+
+    ```
+    mlxtend/mlxtend/plotting/learning_curves.py:150:20: W3301: Do not use nested call of 'max'; it's possible to do 'max(*test_errors, *training_errors)' instead (nested-min-max)
+    mlxtend/mlxtend/plotting/learning_curves.py:151:20: W3301: Do not use nested call of 'min'; it's possible to do 'min(*test_errors, *training_errors)' instead (nested-min-max)
+    ```
+
+    Originalni deo koda:
+    
+    ```python
+    max_y = max(max(test_errors), max(training_errors))
+    min_y = min(min(test_errors), min(training_errors))
+    ```
+
+    Ispravka:
+
+    ```python
+    max_y = max(*test_errors, *training_errors)
+    min_y = min(*test_errors, *training_errors)
+    ```
+
+5. Primer nekorišćene promenljive se javlja u 27 navrata, međutim ispravljeno je samo na jednom mestu, samo radi demonstracije. Takođe, na mnogim mestima, iako se ne koristi, na neki način povećava čitljivost koda, jer ime promenljive bliže određuje šta se zapravo računa u petlji. U slučajevima gde se koriste trivijalne promenljive poput `i` u ovom slučaju, ovo komotno možemo promeniti u `_`, jer ne nosi nikakvu informaciju, a korišenjem `_` ova vrednost će biti ignorisana.
+
+    ```
+    mlxtend/mlxtend/evaluate/f_test.py:194:8: W0612: Unused variable 'i' (unused-variable)
+    ```
+
+    ```python
+    # originalni kod
+    for i in range(5):
+    # ispravka
+    for _ in range(5):
+    ```
+
+### Završno pokretanje analize
+
+Na kraju, nakon svih ovih ispravki, pokrećemo ponovno izvršavanje analize (nakon što smo primenili odgovarajući *patch*):
+
+```
+pylint --extension-pkg-whitelist=numpy \
+    mlxtend/mlxtend \
+    > pylint/reports/03_pylint_final_report.txt
+```
+
+Dobijamo rezultate koji su dostupni u izveštaju [03_pylint_final_report.txt](pylint/reports/03_pylint_final_report.txt) i dobijena je sledeća konačna ocena.
+
+```
+Your code has been rated at 8.72/10 (previous run: 8.40/10, +0.32)
+```
+
+### Zaključak
+
+Može se zaključiti da je projekat već bio u jako dobrom stanju što se tiče praćenja raznih standarda za razvoj *Python* projekta, ali je bilo moguće ovo dodatno popraviti, što je i učinjeno u ovom projektu. A ove ispravke su dodate na ispravke izvršene nakon jediničnog i integracionog testiranja te je sve zajedno dostupno u patch datoteci [mithrandir-linting.patch](mithrandir-linting.patch).
+
+## `cProfile` + `SnakeViz`
 
 ### Zaključci
 Zaključci o upotrebi Alata Z.
 
-## alat-w
+## `py-spy`
 
 ### Zaključci
 Zaključci o upotrebi Alata W.
