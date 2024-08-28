@@ -59,7 +59,7 @@ Za jedinično testiranje odabrane su sledeće funkcionalnosti koje će biti test
     
     U ovom slučaju korišćeno je referenciranje na vrednosti dobijene korišćenjem Min-Max skaliranja iz sklearn biblioteke s obzirom na to da bi ovaj proces trebalo da daje isti rezultat u bilo kojim okolnostima. Zanimljivo, u ovom modulu pronađeno je nekoliko grešaka, koje će u nastavku biti analizirane. Ipak, videćemo da je najčešći problem u radu sa nedostajućim vrednostima.
 
-- [test_tokenizer_emoticons](https://rasbt.github.io/mlxtend/api_subpackages/mlxtend.text/#tokenizer_emoticons)✅
+- [tokenizer_emoticons](https://rasbt.github.io/mlxtend/api_subpackages/mlxtend.text/#tokenizer_emoticons) ✅
 
 - [tokenizer_words_and_emoticons](https://rasbt.github.io/mlxtend/api_subpackages/mlxtend.text/#tokenizer_words_and_emoticons) ❌
 
@@ -414,7 +414,7 @@ good-names= X,X_train,X_test,X_data,X_1,X_2,X_dataset,R,X_boot,X_cols,
 
 Dalje, dodajemo sledeću opciju prilikom pokretanja alata `--extension-pkg-whitelist=numpy` da bismo izbegli prikazivanje određenih upozorenja, koja su praktično lažna upozorenja nastala u starijim verzijama ovog alata, te je počev od neke od novijih verzija dodata mogućnost korišćenja ove opcije za ispravan rad sa `NumPy` bibliotekom, odnosno ispravnu analizu.
 
-*Tokom rada, može biti korisno isključiti obaveštenja koja generišu dosta upozorenja i grešaka poput `C0114 (missing-module-docstring)`, koja naglašava da se ne prati standard za dokumentovanje modula ili u nekom trenutku koristiti fleg --errors-only koji ukazuje samo na one najopasnije potencijalne probleme.*
+*Tokom rada, može biti korisno isključiti obaveštenja koja generišu dosta upozorenja i grešaka poput `C0114 (missing-module-docstring)`, koja naglašava da se ne prati standard za dokumentovanje modula ili u nekom trenutku koristiti fleg `--errors-only` koji ukazuje samo na one najopasnije potencijalne probleme.*
 
 ### Ponovno pokretanje analize
 
