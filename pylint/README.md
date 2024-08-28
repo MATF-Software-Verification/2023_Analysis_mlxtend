@@ -2,7 +2,7 @@
 
 ## Pylint
 
-`Pylint` je statički alat za analizu koda napisanog u programskom jeziku *Python*. Ovaj alat se koristi za proveru potencijalnih grešaka u kodu, za proveru ispravnosti stila pisanja, detekciju neupotrebljenog koda, optimizaciju i uopšteno, za poboljšanje kvaliteta koda. U nastavku sledi uputstvo za korišćenje, a detaljnije informacije o ovom alatu, ali i njegovoj upotrebi u analizi projekta `mlxtend` se može pročitati u izveštaju [`ProjectAnalysisReport.md`](ProjectAnalysisReport.md).
+`Pylint` je statički alat za analizu koda napisanog u programskom jeziku *Python*. Ovaj alat se koristi za proveru potencijalnih grešaka u kodu, za proveru ispravnosti stila pisanja, detekciju neupotrebljenog koda, optimizaciju i uopšteno, za poboljšanje kvaliteta koda. U nastavku sledi uputstvo za korišćenje, a detaljnije informacije o ovom alatu, ali i njegovoj upotrebi u analizi projekta `mlxtend` se mogu pročitati u izveštaju [`ProjectAnalysisReport.md`](../ProjectAnalysisReport.md).
 
 ## Instalacija alata
 
@@ -33,10 +33,10 @@ pylint \
 
 Ovakvim pokretanjem dobićemo kompletan izveštaj, koji ukazuje na sva potencijalna upozorenja, sve stilske preporuke, ali i ono najvažnije, ukazivanje na potencijalne greške u kodu. Na kraju, dobićemo i ocenu celokupnog koda, uzimajući sve prethodno navedene parametre u obzir. Npr. inicijalnim pokretanjem dobijamo ocenu `7.1/10`.
 
-U ovom projektu korišćeni su sledeće opcije (eng. *flags*) prilikom pokretanja:
+U ovom projektu korišćene su sledeće opcije (eng. *flags*) prilikom pokretanja:
 
 ```
---errors-only
+--errors-only  # korišćen samo tokom razvoja, bez beleženja rezultata
 --extension-pkg-whitelist=numpy
 ```
 

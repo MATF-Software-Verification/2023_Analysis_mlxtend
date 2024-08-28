@@ -6,23 +6,21 @@
 
 ## Instalacija alata
 
-*Pročitati preporuke za instalaciju i korišćenje alata za kreiranje izolovanih okruženja u glavnom [README.md](../README.md#preporuka-za-instalaciju-alata) dokumentu.*
-
 `cProfile` je već ugrađen u *Python*, tako da nije potrebna dodatna instalacija. Može se direktno koristiti iz komandne linije ili unutar *Python* skripti.
 
 ## Korišćenje alata
 
-Nakon podešavanja skripti za treniranje modela, `cProfile` se može koristiti za profajliranje koda. U ovom slučaju, skripte treniraju modele za logističku regresiju, perceptron i višeslojni perceptron. Primer pokretanja `cProfile` alata za treniranje jednog od modela:
+Nakon implementacije skripti za treniranje modela, koje će se koristiti za profajliranje, u nastavku sledi primer pokretanja `cProfile` alata za analizu odabrane skripte za treniranje modela:
 
 ```bash
 python -m cProfile -o cProfile/profiles/output_file.prof profiling_scripts/script_name.py
 ```
 
-`output_file.prof` će sadržati rezultate profajliranja, koje zatim možete analizirati pomoću alata `snakeviz` da se ne bi analiziralo u komandnoj liniji.
+`output_file.prof` će sadržati rezultate profajliranja, koji se zatim mogu analizirati pomoću alata `snakeviz` (da se ne bi analiziralo u komandnoj liniji).
 
 ## Vizualizacija rezultata profajliranja sa `snakeviz`
 
-`snakeviz` je alat koji omogućava vizualizaciju rezultata dobijenih profajliranjem, što olakšava interpretaciju i analizu uskih grla u kodu.
+`snakeviz` je alat koji omogućava vizualizaciju rezultata dobijenih profajliranjem što olakšava interpretaciju i analizu uskih grla u kodu.
 
 ### Instalacija alata `snakeviz`
 
@@ -44,4 +42,4 @@ Ova komanda otvara interaktivni prikaz u pregledaču, gde se mogu istraživati r
 
 ## Profili
 
-Profajliranje je izvršeno na skriptama koje treniraju različite modele mašinskog učenja u okviru `mlxtend` biblioteke. Izabran je veliki broj epoha, kako bi se osiguralo da izvršavanje traje dovoljno dugo za značajnu analizu. Primarni cilj nije bio razvoj optimalnih modela, već analiza performansi koda. Rezultati profajliranja se nalaze u folderu [profiles](profiles/). Uz gore opisani postupak, oni se mogu vizualizovati korišćenjem alata `snakeviz`.
+Profajliranje je izvršeno na skriptama koje treniraju različite modele mašinskog učenja u okviru `mlxtend` biblioteke. Izabran je veliki broj epoha, kako bi se osiguralo da izvršavanje traje dovoljno dugo za značajniju analizu. Primarni cilj nije bio razvoj optimalnih modela, već analiza performansi koda. Rezultati profajliranja se nalaze u folderu [profiles](profiles/). Uz gore opisani postupak, oni se mogu vizualizovati korišćenjem alata `snakeviz`.

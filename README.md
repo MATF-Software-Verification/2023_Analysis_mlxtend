@@ -5,7 +5,7 @@ Ovaj repozitorijum namenjen je za izradu samostalnog praktičnog seminarskog rad
 **Autor:** Mladen Canović 1098/2020
 
 ## Opis projekta mlxtend
-`mlxtend` (Machine Learning Library Extensions) je *Python* biblioteka koja pruža korisne alate za svakodnevne zadatke u oblasti *Data Science*-a. Ova biblioteka uključuje alate za izbor atributa, klasifikaciju, regresiju, obradu podataka, evaluaciju modela i vizualizaciju. Razvijena je kako bi proširila mogućnosti postojećih biblioteka za mašinsko učenje, poput [scikit-learn](https://scikit-learn.org)-a i sličnih. `mlxtend` nudi jednostavan i lako proširiv skup alata koji mogu olakšati rad kako istraživačima tako i ljudima u industriji.
+`mlxtend` (Machine Learning Library Extensions) je *Python* biblioteka koja pruža korisne alate za svakodnevne zadatke u oblasti *Data Science*-a. Ova biblioteka uključuje alate za izbor atributa, klasifikaciju, regresiju, obradu podataka, evaluaciju modela i vizualizaciju. Razvija se kako bi proširila mogućnosti postojećih biblioteka za mašinsko učenje, poput [scikit-learn](https://scikit-learn.org)-a i sličnih. `mlxtend` nudi jednostavan i lako proširiv skup alata koji mogu olakšati rad kako istraživačima tako i ljudima u industriji.
 
 ### Autor biblioteke
 
@@ -29,11 +29,11 @@ Korišćeni su sledeći alati:
 - [`cProfile`](cProfile/README.md)
     - Prvi alat korišćen za profajliranje
     - [`SnakeViz`](ProjectAnalysisReport.md#cprofile--snakeviz) je alat koji je korišćen za vizualizaciju
-- ['py-spy](py-spy/README.md)
+- [`py-spy`](py-spy/README.md) je takođe korišćen za profajliranje
 
 ## Preporuka za instalaciju alata
 
-Iako je za svaki od alata dato uputstvo za instalaciju u odgovarajućem folderu, preporuka je da se prethodno kreira radno okruženje korišćenjem alata `pipenv` (postoje i drugi alati, u ovom projektu korišćen je `pipenv`), kako se ne bi zagadilo globalno *Python*, odnosno `pip` okruženje. Dakle, pokretanjem sledećeg niza komandi se ostvaruje kreiranje preporučenog radnog okruženja (podrazumeva se da je na samom sistemu instaliran alat `pipenv` i odgovarajuća verzija *Python*-a).
+Iako je za svaki od alata dato uputstvo za instalaciju u odgovarajućem folderu, preporuka je da se prethodno kreira radno okruženje korišćenjem alata `pipenv` (postoje i drugi alati za kreiranje i upravljanje izolovanim okruženjima, ali u ovom projektu korišćen je `pipenv`), kako se ne bi zagadilo globalno *Python*, odnosno `pip` okruženje. Dakle, pokretanjem sledećeg niza komandi se ostvaruje kreiranje preporučenog radnog okruženja (podrazumeva se da je na samom sistemu instaliran alat `pipenv` i odgovarajuća verzija *Python*-a).
 
 ```bash
 pipenv install --python 3.11 (inicijalizacija okruženja)
