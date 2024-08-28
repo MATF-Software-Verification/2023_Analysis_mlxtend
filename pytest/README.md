@@ -2,7 +2,7 @@
 
 ## Pytest
 
-`Pytest` je popularan alat za testiranje koda napisanog u programskom jeziku *Python*. Omogućava jednostavno pisanje i izvršavanje testova, kao i generisanje detaljnih izveštaja o rezultatima testiranja. Detaljnije informacije o ovom alatu, njegovoj upotrebi u testiranju izabranih delova projekta `mlxtend` se može pročitati u izveštaju [`ProjectAnalysisReport.md`](../ProjectAnalysisReport.md).
+`Pytest` je popularan alat za testiranje koda napisanog u programskom jeziku *Python*. Omogućava jednostavno pisanje i izvršavanje testova, kao i generisanje detaljnih izveštaja o rezultatima testiranja. Detaljnije informacije o ovom alatu i njegovoj upotrebi u testiranju izabranih delova projekta `mlxtend` se mogu pročitati u izveštaju [`ProjectAnalysisReport.md`](../ProjectAnalysisReport.md).
 
 ## Instalacija alata
 
@@ -38,7 +38,7 @@ pip install coverage
 
 ### Korišćenje alata `coverage.py`
 
-Nakon instalacije, `coverage.py` se može pokrenuti u komandnoj liniji. Ovaj alat se koristi u kombinaciji sa alatom pytest, odnosno pokreće se izvršavanje testova tokom čijeg izvršavanja se prati pokrivenost. Potrebno je pokrenuti analizu, a zatim narednom komandom generisati izveštaj u čitljivijem, `html` formatu, umesto korišćenja standardnog izlaza:
+Nakon instalacije, `coverage.py` se može pokrenuti u komandnoj liniji. Ovaj alat se koristi u kombinaciji sa alatom `pytest`, odnosno pokreće se izvršavanje testova tokom čijeg izvršavanja se prati pokrivenost. Potrebno je pokrenuti analizu, a zatim narednom komandom generisati izveštaj u čitljivijem, `html` formatu, umesto korišćenja standardnog izlaza:
 
 ```bash
 coverage run -m pytest pytest/unit_tests/tests/ pytest/integration_tests/tests/
