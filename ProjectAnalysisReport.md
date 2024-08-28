@@ -8,9 +8,9 @@ U okviru ove analize koristiće se različiti alati za verifikaciju i testiranje
 
 ### Lista korišćenih alata:
 - [pytest](#pytest) - jedinično (eng. *unit*) i integraciono (eng. *integration*) testiranje.
-- [pylint](#pylint)
-- [Alat Z](#alat-z)
-- [Alat W](#alat-w)
+- [pylint](#pylint) - statička stilska analiza
+- [cProfile + SnakeViz](#cprofile--snakeviz) - profajliranje
+- [py-spy](#py-spy) - profajliranje + *flame graph*
 
 ## pytest
 
@@ -523,15 +523,90 @@ Može se zaključiti da je projekat već bio u jako dobrom stanju što se tiče 
 
 ## `cProfile` + `SnakeViz`
 
-### Zaključci
-Zaključci o upotrebi Alata Z.
+`cProfile` je ugrađeni alat u *Python*-u za profajliranje, koji omogućava detaljnu analizu performansi koda. Profajliranje je proces merenja vremenskih performansi različitih delova programa, što pomaže u identifikaciji uskih grla i optimizaciji koda. `cProfile` generiše detaljne izveštaje o vremenu izvršavanja svakog poziva funkcije, što omogućava programerima da precizno lociraju najsporije delove koda. Za vizualizaciju podataka dobijenih profajliranjem koristi se `SnakeViz`, alat koji prikazuje rezultate profajliranja na intuitivan način, omogućavajući lakšu analizu i donošenje odluka o optimizaciji.
+
+Budući da je `mlxtend` biblioteka namenjena za mašinsko učenje, odabrano je da se profajliranje testira kroz treniranje različitih modela. Tako su za svrhe profajliranja napisane skripte koje treniraju modele za logističku regresiju, perceptron i višeslojni perceptron. Ove skripte omogućavaju detaljnu analizu performansi prilikom treniranja ovih modela, kako bi se identifikovali delovi koda koji mogu biti optimizovani. Izabran je veliki broj epoha, kako bi izvršavanje trajalo nešto duže nego što je to realno potrebno da bi se dobio korektan model za podatke nad kojima je treniran model. Naravno, razvoj smislenih modela nije u prvom planu već profajliranje. Skripte su dostupne u folderu [profiling_scripts](profiling_scripts/).
+
+### Analiza i zaključci
+
+Kao što je gore napomenuto, profajlirane su sledeće skripte, odnosno delovi koda posvećeni pre svega treniranju klasifikacionih modela. Interesantno je napomenuti da je prilikom pokretanja (pomalo besmislenih) test primera, koji su doveli do ekstremnih vrednosti argumenata prilikom poziva sigmoidne funkcije odnosno unakrsne entropije, kao i pokušaj računanja `log(0)`, tako da je detektovano nepravilno ponašanje na nekoliko mesta. Konkretno, u svakom od ovih slučajeva bilo je potrebno na neki način ograničiti visoke vrednosti, pa je to urađeno na analogan način u sva tri slučaja, a ovakvo rešavanje ovog tipa problema je standardna prilikom rada sa ovim algoritmima.
+
+```python
+def _logit_cost(self, y, y_val):
+    y_val = np.clip(y_val, 1e-15, 1-1e-15)  # dodata je ova linija
+    logit = -y.dot(np.log(y_val)) - ((1 - y).dot(np.log(1 - y_val)))
+    if self.l2_lambda:
+        l2 = self.l2_lambda / 2.0 * np.sum(self.w_**2)
+        logit += l2
+    return logit
+```
+
+```python
+def _sigmoid_activation(self, z):
+    """Compute the output of the logistic sigmoid function."""
+    z = np.clip(z, -500, 500)  # dodata je ova linija
+    return 1.0 / (1.0 + np.exp(-z))
+```
+
+```python
+def _cross_entropy(self, output, y_target):
+    output = np.clip(output, 1e-15, 1 - 1e-15)  # dodata je ova linija
+    return -np.sum(np.log(output) * (y_target), axis=1)
+```
+
+Kada su ovi *bagovi* sređeni, pokrenuto je profajliranje korišćenjem već opisanih skripti. Na primer, analizirajmo treniranje perceptrona:
+
+```bash
+python -m cProfile -o cProfile/profiles/train_perceptron_profile_output.prof profiling_scripts/train_perceptron.py
+snakeviz cProfile/profiles/train_perceptron_profile_output.prof
+```
+
+Na sledećoj slici možemo videti podrazumevajući izlaz, koji biva otvoren u pregledaču nakon što pokrenemo vizualizaciju gore navedenim komandama:
+
+![cProfile-SnakeViz Default View](cProfile/imgs/00_cProfile_default_view_merged.png)
+
+Vidimo *icicle* graf, koji je suprotnost *flame graph*-u, tačnije ima obrnutu orijentaciju, tako da umesto da funkcije rastu ka vrhu kao u *flame graph*-u, u *icicle graph*-u funkcije rastu ka dnu. Korenski pozivi funkcija su na vrhu, dok se dublje funkcije nalaze niže u grafu. Na ovaj način mogu se pratiti dublji nivoi poziva funkcija. Na ove pravougaonike se može kliknuti da bi se zumirao taj segment, odnosno da bi se istražili detalji o pojedinačnim funkcijama (napomena da se može klikovima na redove u tabeli učiniti ista akcija).
+
+Sve u svemu, možemo videti da najveći deo vremena izvršavanja uzimaju, logično, funkcije `_fit()`, `_to_classlabels()`, `_net_input()`. Što se tiče poslednje dve funkcije, one su vrlo jednostavne i koriste pozive funkcija iz `NumPy` biblioteke, tako da se tu praktično ne može tražiti prilika za eventualna ubrzanja. Sve ostale funkcije pored navedenih su takođe mahom bibliotečke funkcije iz `NumPy`. Uložen je određeni trud da se ovo malo ubrza, ali može se samo konstatovati da je funkcija optimalno napisana, odnosno da je celokupan proces optimalan (do na korišćene biblioteke).
+
+Ono što je zanimljivo prokomentarisati jeste opcija `Sunburst` za pregled profila. U pitanju je prikaz hijerarhije funkcija kroz koncentrične krugove (praktično kružne prstenove izdeljene u krućne lukove), gde se unutrašnji krugovi odnose na funkcije koje su na vrhu hijerarhije poziva, dok se spoljašnji krugovi odnose na dublje nivoe poziva. Kao i obično, veličina svakog segmenta na grafikonu odgovara ukupnom vremenu izvršavanja te funkcije. Opcija *Call Stack* (u gornjem desnom uglu prikaza) takođe može biti zgodna zbog svoje preglednosti. 
+
+![cProfile-SnakeViz Sunburst View](cProfile/imgs/01_snakeviz_sunburst.png)
+
+Kada analiziramo izveštaj procesa (tačnije profil) treniranja logističke regresije, takođe ubrzo dolazimo do skupa bazičnih operacija, koje bi bilo izuzetno izazovno optimizovati, ako uopšte moguće. Identičan slučaj je i za treniranje *MLP* modela.
+
+*Iako nema direktne veze sa profilima, prilikom inspekcije uskih grla koda i pokušaja traženja prostora za optimizaciju, pronađena je sledeća funkcija i objašnjenje uz nju, na koji način se izbegavaju nepogodne vrednosti, tako da su u ovom slučaju one dobro obrađene, iako to malopre nije bio slučaj:*
+
+```python
+def _sigmoid(self, z):
+    """Compute logistic function (sigmoid).
+    Uses scipy.special.expit to avoid overflow
+    error for very small input values z.
+    """
+    # return 1.0 / (1.0 + np.exp(-z))
+    return expit(z)
+```
+
+Na kraju, ovaj proces je više pomogao da se detektuje još poneki *bag* u kodu nego da se izvrši određena optimizacija, s obzirom na to da je kôd izuzetno dobro napisan i jako teško je pronaći deo često izvršavanog dela koda, koji bi bio pogodan za dodatnu optimizaciju.
 
 ## `py-spy`
 
-### Zaključci
-Zaključci o upotrebi Alata W.
+Nakon što su rezultati profajliranja generisani pomoću `cProfile` i vizualizovani sa `SnakeViz`, iskorišćen je alat `py-spy`. Za razliku od `cProfile` alata, koji zahteva pokretanje profajliranja iz same *Python* skripte, `py-spy` omogućava snimanje performansi `Python` aplikacija u realnom vremenu, bez potrebe za modifikovanjem koda. Ovo bi moglo da bude posebno zgodno za proveravanje procesa treniranja izuzetno velikih i kompleksnih modela u mašinskom učenju, ukoliko se naknadno dođe do ideje da se prati šta se događa prilikom treniranja modela, odnosno da li neki deo koda uzima više vremena nego što je to bilo očekivano. Iako to nije primenjivo na ovaj projekat, navedeni alat je vrlo zgodan za produkciona okruženja. Opis instalacije i pokretanja ovog alata opisan je u dokumentu [r](py-spy/README.md).
 
+### Analiza i zaključci
+
+Nakon pokrenutog treninga perceptrona, proces je prvo praćen prvom opcijom, u terminalu. Opet možemo da primetimo, kao i tokom svih ostalih profajling analiza, da je kôd odlično napisan i da je teško optimizovati ga.
+
+![py-spy Top Terminal View](py-spy/imgs/00_py-spy_top.png)
+
+Podaci su zatim predstavljeni u formatu *flame graph*-ova, koji pružaju vizuelnu analizu uskih grla u kodu.
+
+![py-spy Flame Graph](py-spy/flame_graphs/perceptron.svg)
+
+Svi rezultati profajliranja u vidu *flame graph*-ova nalaze se u folderu [flame_graphs](flame_graphs/).
 
 ## Zaključak
 
+Kroz analizu projekta `mlxtend` primenom različitih alata za verifikaciju, može se doći do zaključka da je projekat izuzetno kvalitetno napisan, posebno u pogledu efikasnosti izvršavanja. Kôd je stilski dobro organizovan i čitljiv, što doprinosi njegovoj održivosti i lakoći razumevanja.
 
+Međutim, uprkos visokom kvalitetu koda, identifikovan je nezanemarljiv broj bagova, koji su donekle uzrokovani promenama u verzijama, ali i manjim propustima tokom razvoja. Iako je projekat odličan, definitivno postoji prostor za dodatna poboljšanja, a očigledno postoji potreba za boljom pokrivenošću testovima. Primena opisanih alata u ovom projektu pokazuje koliko je važno redovno testiranje tokom procesa razvoja softvera.

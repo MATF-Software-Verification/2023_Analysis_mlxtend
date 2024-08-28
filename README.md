@@ -26,16 +26,21 @@ Korišćeni su sledeći alati:
     - [`coverage.py`](pytest/README.md#praćenje-pokrivenosti) je korišćen za praćenje pokrivenosti koda
 - [`pylint`](pylint/README.md)
     - Statička analiza kvaliteta koda
-- TODO *profajler*
+- [`cProfile`](cProfile/README.md)
+    - Prvi alat korišćen za profajliranje
+    - [`SnakeViz`](ProjectAnalysisReport.md#cprofile--snakeviz) je alat koji je korišćen za vizualizaciju
+- ['py-spy](py-spy/README.md)
 
 ## Preporuka za instalaciju alata
 
 Iako je za svaki od alata dato uputstvo za instalaciju u odgovarajućem folderu, preporuka je da se prethodno kreira radno okruženje korišćenjem alata `pipenv` (postoje i drugi alati, u ovom projektu korišćen je `pipenv`), kako se ne bi zagadilo globalno *Python*, odnosno `pip` okruženje. Dakle, pokretanjem sledećeg niza komandi se ostvaruje kreiranje preporučenog radnog okruženja (podrazumeva se da je na samom sistemu instaliran alat `pipenv` i odgovarajuća verzija *Python*-a).
-```
+
+```bash
 pipenv install --python 3.11 (inicijalizacija okruženja)
 pipenv shell (aktiviranje okruženja)
 pip install -r requirements.txt (instalacija svih potrebnih paketa)
 ```
+
 Tokom razvoja projekta, biblioteka `mlxtend` je instalirana sa opcijom `-e`, kako bi se promene te biblioteke odmah registrovale u sistemu što umnogome olakšava rad:
 
 ```bash
